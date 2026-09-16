@@ -1,0 +1,21 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# Java compilation
+*.class
+build/
+out/
+
+# Secrets
+.env
+*.key
+
+# Runtime output
+*.log
+
+# IDE
+.idea/
+.vscode/
+.DS_Store
