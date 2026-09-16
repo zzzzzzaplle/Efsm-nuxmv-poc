@@ -1,0 +1,43 @@
+-- Generated from EFSM: Dishwasher
+MODULE main
+
+IVAR
+  event : {NONE, CLOSE_DOOR, OPEN_DOOR, START, WASH_DONE, DRY_DONE, RESET};
+
+VAR
+  state : {IDLE, READY, WASHING, DRYING, COMPLETE};
+  doorClosed : boolean;
+
+ASSIGN
+  init(state) := IDLE;
+  next(state) :=
+    case
+      state = IDLE & event = CLOSE_DOOR : READY; -- T1
+      state = READY & event = OPEN_DOOR : IDLE; -- T2
+      state = READY & event = START & (doorClosed = TRUE) : WASHING; -- T3
+      state = WASHING & event = OPEN_DOOR : WASHING; -- T8
+      state = WASHING & event = WASH_DONE : DRYING; -- T4
+      state = DRYING & event = DRY_DONE : COMPLETE; -- T5
+      state = COMPLETE & event = OPEN_DOOR : IDLE; -- T6
+      state = COMPLETE & event = RESET : READY; -- T7
+      TRUE : state;
+    esac;
+
+  init(doorClosed) := FALSE;
+  next(doorClosed) :=
+    case
+      state = IDLE & event = CLOSE_DOOR : TRUE; -- T1
+      state = READY & event = OPEN_DOOR : FALSE; -- T2
+      state = WASHING & event = OPEN_DOOR : FALSE; -- T8
+      state = COMPLETE & event = OPEN_DOOR : FALSE; -- T6
+      TRUE : doorClosed;
+    esac;
+
+-- P1: The door must remain closed while washing.
+CTLSPEC AG (state = WASHING -> doorClosed = TRUE)
+
+-- P2: The door must remain closed while drying.
+CTLSPEC AG (state = DRYING -> doorClosed = TRUE)
+
+-- P3: It must be possible to complete a washing cycle.
+CTLSPEC EF state = COMPLETE

@@ -1,0 +1,109 @@
+{
+  "name": "Dishwasher",
+  "initialState": "IDLE",
+  "states": [
+    "IDLE",
+    "READY",
+    "WASHING",
+    "DRYING",
+    "COMPLETE"
+  ],
+  "events": [
+    "CLOSE_DOOR",
+    "OPEN_DOOR",
+    "START",
+    "WASH_DONE",
+    "DRY_DONE",
+    "RESET"
+  ],
+  "variables": [
+    {
+      "name": "doorClosed",
+      "type": "boolean",
+      "initial": false
+    }
+  ],
+  "transitions": [
+    {
+      "id": "T1",
+      "source": "IDLE",
+      "event": "CLOSE_DOOR",
+      "target": "READY",
+      "actions": {
+        "doorClosed": "TRUE"
+      }
+    },
+    {
+      "id": "T2",
+      "source": "READY",
+      "event": "OPEN_DOOR",
+      "target": "IDLE",
+      "actions": {
+        "doorClosed": "FALSE"
+      }
+    },
+    {
+      "id": "T3",
+      "source": "READY",
+      "event": "START",
+      "guard": "doorClosed = TRUE",
+      "target": "WASHING"
+    },
+    {
+      "id": "T8",
+      "source": "WASHING",
+      "event": "OPEN_DOOR",
+      "target": "WASHING",
+      "actions": {
+        "doorClosed": "FALSE"
+      }
+    },
+    {
+      "id": "T4",
+      "source": "WASHING",
+      "event": "WASH_DONE",
+      "target": "DRYING"
+    },
+    {
+      "id": "T5",
+      "source": "DRYING",
+      "event": "DRY_DONE",
+      "target": "COMPLETE"
+    },
+    {
+      "id": "T6",
+      "source": "COMPLETE",
+      "event": "OPEN_DOOR",
+      "target": "IDLE",
+      "actions": {
+        "doorClosed": "FALSE"
+      }
+    },
+    {
+      "id": "T7",
+      "source": "COMPLETE",
+      "event": "RESET",
+      "target": "READY"
+    }
+  ],
+  "properties": [
+    {
+      "id": "P1",
+      "kind": "CTL",
+      "formula": "AG (state = WASHING -> doorClosed = TRUE)",
+      "description": "The door must remain closed while washing."
+    },
+    {
+      "id": "P2",
+      "kind": "CTL",
+      "formula": "AG (state = DRYING -> doorClosed = TRUE)",
+      "description": "The door must remain closed while drying."
+    },
+    {
+      "id": "P3",
+      "kind": "CTL",
+      "formula": "EF state = COMPLETE",
+      "description": "It must be possible to complete a washing cycle."
+    }
+  ]
+}
