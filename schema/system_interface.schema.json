@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.org/system_interface.schema.json",
+  "title": "System Interface Schema",
+  "description": "Stable observable output alphabet used by formal properties.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "output_events"
+  ],
+  "properties": {
+    "output_events": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Za-z][A-Za-z0-9_]*$"
+      }
+    }
+  }
+}

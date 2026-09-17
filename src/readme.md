@@ -18,10 +18,11 @@ initialState 是否在 states 集合内；
 
 3.SMV 规则代码生成（Code Generation）
 generate_smv() 与 transition_condition()：
-变量映射：将事件集合映射为 SMV 输入变量 IVAR event : {NONE, ...};；将状态和数据变量映射为 VAR state 与范围变量（如 boolean 或 min..max）。
+变量映射：将事件集合映射为每步由环境非确定选择的 `VAR event : {NONE, ...}`，使 CTL 性质和反例能够观察触发事件；将状态和数据变量映射为 `VAR state` 与范围变量（如 boolean 或 min..max）。
 状态转移：基于当前 state、event 与 guard（守卫条件）构建 ASSIGN next(state) := case ... esac;。
-数据变量更新：将迁移上的 actions 翻译为相应变量的 next(var) 赋值逻辑。
-性质规格（Properties）：将模型中的待验证性质转换为 nuXmv 的 CTLSPEC 计算树逻辑公式。
+数据变量更新：将迁移上的 `updates` 翻译为相应变量的 `next(var)` 赋值逻辑。
+瞬时输出：将 transition 的 `outputs` 转换成 `emit_<OUTPUT>` 组合布尔信号；输出全集可由独立 system interface 文件固定。
+性质规格（Properties）：从独立性质文件读取 CTL/LTL，避免 Candidate EFSM 修改或弱化待验证性质。
 
 4.CLI 命令行入口
 main()：提供命令行接口，支持传入输入 JSON 路径、目标 SMV 输出路径以及 Schema 文件路径。
@@ -30,4 +31,8 @@ main()：提供命令行接口，支持传入输入 JSON 路径、目标 SMV 输
 5.典型使用方式
 在终端中执行如下命令将 EFSM 模型转换为 SMV 模型：
 bash
-python3 src/efsm_to_smv.py models/dishwasher.json generated/dishwasher.smv
+python3 src/efsm_to_smv.py \
+  benchmarks/fsm_bench_20_fv/vending_machine/oracle/gold_efsm.json \
+  generated/VendingMachine.smv \
+  --interface benchmarks/fsm_bench_20_fv/vending_machine/system_interface.json \
+  --properties benchmarks/fsm_bench_20_fv/vending_machine/oracle/gold_properties.json

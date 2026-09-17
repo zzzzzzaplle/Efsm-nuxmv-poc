@@ -17,7 +17,7 @@ This model represents one drink vending machine and one transaction at a time.
 ## 2. Step semantics
 
 1. A configuration consists of the current control state and current variable values.
-2. At each step, the environment supplies at most one input event. The generated SMV model may use `NONE` when no external event occurs.
+2. At each step, the environment supplies at most one input event. The generated SMV model uses an unconstrained, nondeterministically updated `event` state variable so CTL properties and counterexamples can observe the chosen event. `NONE` represents a step in which no external event occurs; the variable remains an environment input semantically even though it is encoded as `VAR` rather than `IVAR`.
 3. Guards are evaluated over the current configuration.
 4. If one transition is enabled, its target state and `updates` become effective in the next configuration.
 5. The transition's `outputs` are instantaneous observable effects of that transition. They are emitted once and are not persistent state.
@@ -54,7 +54,7 @@ This model represents one drink vending machine and one transaction at a time.
 - `REJECT_COIN`: issued once when an additional coin is inserted while one credit is already stored.
 - An empty `outputs` array means that the transition produces no observable business effect.
 
-The current SMV converter does not yet encode transition outputs. The Gold EFSM nevertheless records them as the canonical observable effects for later model checking, code generation, and hidden tests. Output-aware verification must be implemented before the formal-verification treatment experiment.
+The SMV converter represents every declared output as a combinational Boolean signal named `emit_<OUTPUT>`. The signal is true exactly in the source step whose enabled transition emits that output; otherwise it is false. The frozen output alphabet is stored separately in `system_interface.json`, so a missing Candidate output remains a defined signal with value `FALSE` and can be rejected by a formal property.
 
 ## 5. Unspecified events
 
@@ -74,7 +74,7 @@ The Gold model is intended to maintain the following invariants:
 - While dispensing, additional drink selections do not change `selectedDrink`.
 - While dispensing, cancel does not terminate the transaction or return a coin.
 
-These invariants will later be formalized in the independently frozen `gold_properties.json`.
+These invariants are formalized in the independently maintained `oracle/gold_properties.json`.
 
 ## 7. Forbidden trace interpretation
 

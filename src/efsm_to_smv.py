@@ -41,7 +41,10 @@ def validate_structure(
     )
 
 
-def validate_semantics(model: dict[str, Any]) -> None:
+def validate_semantics(
+    model: dict[str, Any],
+    declared_outputs: set[str] | None = None,
+) -> None:
     """检查Schema无法表达的EFSM语义关系。"""
     states = set(model["states"])
     events = set(model["events"])
@@ -99,6 +102,14 @@ def validate_semantics(model: dict[str, Any]) -> None:
                     f"variable {variable_name!r}"
                 )
 
+        if declared_outputs is not None:
+            for output_name in transition.get("outputs", []):
+                if output_name not in declared_outputs:
+                    problems.append(
+                        f"{transition_id}: output {output_name!r} "
+                        "is not declared in the system interface"
+                    )
+
     if problems:
         raise ValueError(
             "Semantic validation failed:\n  - "
@@ -131,9 +142,39 @@ def smv_initial_value(value: bool | int | str) -> str:
     return str(value)
 
 
+def infer_output_events(model: dict[str, Any]) -> list[str]:
+    """按名称稳定收集模型中出现的业务输出。"""
+    return sorted({
+        output_name
+        for transition in model["transitions"]
+        for output_name in transition.get("outputs", [])
+    })
+
+
+def output_expression(
+    model: dict[str, Any],
+    output_name: str,
+) -> str:
+    """生成一个瞬时输出对应的组合逻辑表达式。"""
+    conditions = [
+        transition_condition(transition)
+        for transition in model["transitions"]
+        if output_name in transition.get("outputs", [])
+    ]
+
+    if not conditions:
+        return "FALSE"
+
+    return " | ".join(
+        f"({condition})"
+        for condition in conditions
+    )
+
+
 def generate_smv(
     model: dict[str, Any],
     properties: list[dict[str, Any]] | None = None,
+    output_events: list[str] | None = None,
 ) -> str:
     """将完整EFSM模型转换成SMV文本。"""
     model_name = (
@@ -147,10 +188,8 @@ def generate_smv(
         f"-- Generated from EFSM: {model_name}",
         "MODULE main",
         "",
-        "IVAR",
-        f"  event : {{NONE, {', '.join(model['events'])}}};",
-        "",
         "VAR",
+        f"  event : {{NONE, {', '.join(model['events'])}}};",
         f"  state : {{{', '.join(model['states'])}}};",
     ]
 
@@ -171,9 +210,29 @@ def generate_smv(
             f"  {variable['name']} : {smv_type};"
         )
 
+    if output_events is None:
+        output_events = infer_output_events(model)
+
+    if output_events:
+        lines.extend([
+            "",
+            "DEFINE",
+        ])
+
+        for output_name in output_events:
+            expression = output_expression(model, output_name)
+            lines.append(
+                f"  emit_{output_name} := {expression};"
+            )
+
     lines.extend([
         "",
         "ASSIGN",
+        "  init(event) := "
+        f"{{NONE, {', '.join(model['events'])}}};",
+        "  next(event) := "
+        f"{{NONE, {', '.join(model['events'])}}};",
+        "",
         f"  init(state) := {initial_state};",
         "  next(state) :=",
         "    case",
@@ -290,13 +349,43 @@ def main() -> None:
         help="Formal properties JSON Schema file",
     )
 
+    parser.add_argument(
+        "--interface",
+        type=Path,
+        default=None,
+        help=(
+            "Optional system interface JSON. Its output_events "
+            "declare stable observable output signals."
+        ),
+    )
+
+    parser.add_argument(
+        "--interface-schema",
+        type=Path,
+        default=Path("schema/system_interface.schema.json"),
+        help="System interface JSON Schema file",
+    )
+
     args = parser.parse_args()
 
     model = load_json(args.model)
     schema = load_json(args.schema)
 
     validate_structure(model, schema)
-    validate_semantics(model)
+
+    output_events = None
+    if args.interface:
+        interface_data = load_json(args.interface)
+        interface_schema = load_json(args.interface_schema)
+        validate_structure(interface_data, interface_schema)
+        output_events = interface_data["output_events"]
+
+    declared_outputs = (
+        set(output_events)
+        if output_events is not None
+        else None
+    )
+    validate_semantics(model, declared_outputs=declared_outputs)
 
     properties_list = None
     if args.properties:
@@ -305,7 +394,11 @@ def main() -> None:
         validate_structure(properties_data, properties_schema)
         properties_list = properties_data["properties"]
 
-    smv_text = generate_smv(model, properties=properties_list)
+    smv_text = generate_smv(
+        model,
+        properties=properties_list,
+        output_events=output_events,
+    )
 
     args.output.parent.mkdir(
         parents=True,
@@ -320,6 +413,8 @@ def main() -> None:
     print(f"OK: validated {args.model}")
     if args.properties:
         print(f"OK: validated properties {args.properties}")
+    if args.interface:
+        print(f"OK: validated interface {args.interface}")
     print(f"OK: generated {args.output}")
 
 

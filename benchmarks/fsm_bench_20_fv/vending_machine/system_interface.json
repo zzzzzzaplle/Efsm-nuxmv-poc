@@ -1,0 +1,8 @@
+{
+  "output_events": [
+    "DISPENSE_COFFEE",
+    "DISPENSE_TEA",
+    "RETURN_COIN",
+    "REJECT_COIN"
+  ]
+}
