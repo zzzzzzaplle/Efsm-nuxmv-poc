@@ -123,7 +123,7 @@ def transition_condition(
     return " & ".join(conditions)
 
 
-def smv_initial_value(value: bool | int) -> str:
+def smv_initial_value(value: bool | int | str) -> str:
     """把JSON初始值转换成SMV表示。"""
     if isinstance(value, bool):
         return "TRUE" if value else "FALSE"
@@ -156,8 +156,12 @@ def generate_smv(model: dict[str, Any]) -> str:
 
     variables = model.get("variables", [])
     for variable in variables:
-        if variable["type"] == "boolean":
+        v_type = variable["type"]
+        if v_type == "boolean":
             smv_type = "boolean"
+        elif v_type == "enum":
+            values = variable.get("values", [])
+            smv_type = f"{{{', '.join(values)}}}"
         else:
             minimum = variable.get("minimum", -1000)
             maximum = variable.get("maximum", 1000)
