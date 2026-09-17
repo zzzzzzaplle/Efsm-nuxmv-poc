@@ -129,7 +129,8 @@ def transition_condition(
     guard = transition.get("guard")
 
     if guard and guard != "TRUE":
-        conditions.append(f"({guard})")
+        smv_guard = guard.replace("==", "=")
+        conditions.append(f"({smv_guard})")
 
     return " & ".join(conditions)
 

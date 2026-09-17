@@ -43,7 +43,7 @@ from src.efsm_to_smv import (
 # ==============================================================================
 LLM_SETTINGS = {
     # 1. 你的 API Key (直接在此填入，例如 "sk-xxxxxxxx")
-    "api_key": "YOUR_API_KEY_HERE",
+    "api_key": "",
 
     # 2. 接口地址 (常见服务商见下方注释，默认使用 DeepSeek)
     "base_url": "https://api.deepseek.com/v1",
@@ -451,13 +451,19 @@ def run_single_verification(
     # 业务意图：首先调用项目已有的 efsm_to_smv 生成 SMV 文件
     translate_command = [
         sys.executable,
-        "src/efsm_to_smv.py",
+        str(project_root_directory / "src" / "efsm_to_smv.py"),
         str(candidate_model_path),
         str(output_smv_path),
+        "--schema",
+        str(project_root_directory / "schema" / "efsm.schema.json"),
         "--properties",
         str(properties_path),
+        "--properties-schema",
+        str(project_root_directory / "schema" / "formal_properties.schema.json"),
         "--interface",
         str(interface_path),
+        "--interface-schema",
+        str(project_root_directory / "schema" / "system_interface.schema.json"),
     ]
 
     translation_result = subprocess.run(
@@ -479,7 +485,10 @@ def run_single_verification(
         text=True,
     )
 
-    raw_verification_log = solver_result.stdout
+    raw_verification_log = solver_result.stdout + solver_result.stderr
+    if solver_result.returncode != 0:
+        return False, raw_verification_log, 0, 0, ""
+
     all_passed, passed_count, failed_count, failure_trace = parse_nuxmv_output(
         raw_verification_log
     )
@@ -600,6 +609,13 @@ def execute_experiment(
         summary_records["rounds"].append(round_record)
 
         print(f"[{round_name}] 结果: 通过 {true_count} 条，违例 {false_count} 条")
+
+        # 卫语句：没有解析到任何性质结果，说明转译或 nuXmv 执行失败，不能当作反例修复
+        if true_count == 0 and false_count == 0:
+            error_message = log_output.strip() or "nuXmv 未输出任何性质验证结果"
+            print(f"[!] 验证流程失败，停止迭代: {error_message}")
+            summary_records["error"] = error_message
+            break
 
         # 业务意图：全部性质通过，提前成功终止
         if all_passed:

@@ -1,0 +1,175 @@
+{
+  "name": "DrinkVendingMachine",
+  "system_name": "Drink Vending Machine",
+  "domain": "vending machine",
+  "initial_state": "Idle",
+  "states": [
+    "Idle",
+    "CreditAvailable",
+    "Dispensing"
+  ],
+  "events": [
+    "insert_coin",
+    "press_coffee",
+    "press_tea",
+    "press_cancel",
+    "dispensing_complete"
+  ],
+  "variables": [
+    {
+      "name": "credit",
+      "type": "integer",
+      "initial": 0,
+      "minimum": 0,
+      "maximum": 1
+    }
+  ],
+  "transitions": [
+    {
+      "id": "T1",
+      "source": "Idle",
+      "event": "insert_coin",
+      "guard": "credit == 0",
+      "updates": {
+        "credit": "1"
+      },
+      "outputs": [],
+      "target": "CreditAvailable",
+      "requirement": "R2"
+    },
+    {
+      "id": "T2",
+      "source": "Idle",
+      "event": "press_coffee",
+      "guard": "TRUE",
+      "outputs": [],
+      "target": "Idle",
+      "requirement": "R5"
+    },
+    {
+      "id": "T3",
+      "source": "Idle",
+      "event": "press_tea",
+      "guard": "TRUE",
+      "outputs": [],
+      "target": "Idle",
+      "requirement": "R5"
+    },
+    {
+      "id": "T4",
+      "source": "Idle",
+      "event": "press_cancel",
+      "guard": "TRUE",
+      "outputs": [],
+      "target": "Idle",
+      "requirement": "R8"
+    },
+    {
+      "id": "T5",
+      "source": "CreditAvailable",
+      "event": "press_coffee",
+      "guard": "credit == 1",
+      "outputs": [
+        "DISPENSE_COFFEE"
+      ],
+      "target": "Dispensing",
+      "requirement": "R3"
+    },
+    {
+      "id": "T6",
+      "source": "CreditAvailable",
+      "event": "press_tea",
+      "guard": "credit == 1",
+      "outputs": [
+        "DISPENSE_TEA"
+      ],
+      "target": "Dispensing",
+      "requirement": "R4"
+    },
+    {
+      "id": "T7",
+      "source": "CreditAvailable",
+      "event": "press_cancel",
+      "guard": "credit == 1",
+      "updates": {
+        "credit": "0"
+      },
+      "outputs": [
+        "RETURN_COIN"
+      ],
+      "target": "Idle",
+      "requirement": "R7"
+    },
+    {
+      "id": "T8",
+      "source": "CreditAvailable",
+      "event": "insert_coin",
+      "guard": "credit == 1",
+      "updates": {
+        "credit": "1"
+      },
+      "outputs": [
+        "REJECT_COIN"
+      ],
+      "target": "CreditAvailable",
+      "requirement": "R12"
+    },
+    {
+      "id": "T9",
+      "source": "Dispensing",
+      "event": "press_coffee",
+      "guard": "TRUE",
+      "outputs": [],
+      "target": "Dispensing",
+      "requirement": "R9"
+    },
+    {
+      "id": "T10",
+      "source": "Dispensing",
+      "event": "press_tea",
+      "guard": "TRUE",
+      "outputs": [],
+      "target": "Dispensing",
+      "requirement": "R9"
+    },
+    {
+      "id": "T11",
+      "source": "Dispensing",
+      "event": "press_cancel",
+      "guard": "TRUE",
+      "outputs": [],
+      "target": "Dispensing",
+      "requirement": "R13"
+    },
+    {
+      "id": "T12",
+      "source": "Dispensing",
+      "event": "dispensing_complete",
+      "guard": "TRUE",
+      "updates": {
+        "credit": "0"
+      },
+      "outputs": [],
+      "target": "Idle",
+      "requirement": "R6"
+    }
+  ],
+  "forbidden_behaviours": [
+    {
+      "trace": [
+        "DISPENSE_COFFEE",
+        "DISPENSE_TEA"
+      ],
+      "reason": "Machine must never dispense coffee and tea within the same transaction.",
+      "requirement": "R10"
+    },
+    {
+      "trace": [
+        "DISPENSE_TEA",
+        "DISPENSE_COFFEE"
+      ],
+      "reason": "Machine must never dispense coffee and tea within the same transaction.",
+      "requirement": "R10"
+    }
+  ]
+}
