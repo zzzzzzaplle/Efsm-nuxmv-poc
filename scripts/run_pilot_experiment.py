@@ -25,6 +25,11 @@ from typing import Any
 from jsonschema import Draft202012Validator
 import requests
 
+# 确保项目根目录在 sys.path 中，无论在哪个目录执行脚本均可正常导入 src
+project_root_directory = Path(__file__).resolve().parent.parent
+if str(project_root_directory) not in sys.path:
+    sys.path.insert(0, str(project_root_directory))
+
 # 引入项目自带的转译与语义校验模块
 from src.efsm_to_smv import (
     generate_smv,
@@ -33,29 +38,207 @@ from src.efsm_to_smv import (
     validate_structure,
 )
 
+# ==============================================================================
+# 用户模型与 API 配置区域 (无需配置系统环境变量，可直接在此填写与维护)
+# ==============================================================================
+LLM_SETTINGS = {
+    # 1. 你的 API Key (直接在此填入，例如 "sk-xxxxxxxx")
+    "api_key": "YOUR_API_KEY_HERE",
 
-def find_nuxmv_executable(custom_path: str | None) -> str:
-    """寻找可用的 nuXmv 执行程序路径。"""
-    # 业务意图：优先使用用户命令行或环境变量指定的路径
-    if custom_path and os.path.exists(custom_path):
-        return custom_path
+    # 2. 接口地址 (常见服务商见下方注释，默认使用 DeepSeek)
+    "base_url": "https://api.deepseek.com/v1",
 
+    # 3. 目标模型名称 (如 deepseek-chat, qwen-plus, gpt-4o 等)
+    "model_name": "deepseek-v4-flash",
+}
+
+# 常见厂商配置参考 (可直接将上方 base_url 和 model_name 替换为以下值):
+# - DeepSeek:
+#     base_url:   "https://api.deepseek.com/v1"
+#     model_name: "deepseek-chat"
+# - 阿里通义千问 (DashScope):
+#     base_url:   "https://dashscope.aliyuncs.com/compatible-mode/v1"
+#     model_name: "qwen-plus" 或 "qwen-max"
+# - OpenAI:
+#     base_url:   "https://api.openai.com/v1"
+#     model_name: "gpt-4o" 或 "gpt-4o-mini"
+# - 月之暗面 (Moonshot / Kimi):
+#     base_url:   "https://api.moonshot.cn/v1"
+#     model_name: "moonshot-v1-8k"
+
+# ==============================================================================
+# 待运行的 Benchmark 系统列表 (一维数组配置)
+# 想要运行某个系统就保留，不想运行直接在行首添加 # 注释即可
+# ==============================================================================
+ACTIVE_BENCHMARK_SYSTEMS = [
+    "vending_machine",  # 自动售货机（已配齐 22 条 Gold CTL 形式化规约与接口，首发试点）
+    # "access_control",              # 门禁控制系统
+    # "atm",                         # 自动取款机
+    # "bike_rental",                 # 共享单车租赁
+    # "car_rental",                  # 汽车租赁系统
+    # "ecommerce_checkout",          # 电商结账流程
+    # "elevator",                    # 电梯控制系统
+    # "gym_membership",              # 健身房会员系统
+    # "hotel_booking",               # 酒店预订系统
+    # "library_loan",                # 图书借阅系统
+    # "login_system",                # 用户登录鉴权
+    # "medical_appointment_booking", # 医疗预约挂号
+    # "online_examination",          # 在线考试系统
+    # "package_locker",              # 快递快递柜
+    # "parking_gate",                # 停车场道闸
+    # "restaurant_reservation",     # 餐厅订座系统
+    # "smart_thermostat",            # 智能恒温器
+    # "ticket_machine",              # 自动售票机
+    # "train_ticket_booking",        # 火车票预订系统
+    # "warehouse_inventory",         # 仓库库存管理
+]
+
+# ==============================================================================
+# nuXmv 求解器路径配置 (同时兼容 macOS 与 WSL/Linux 跨平台协作)
+# 自动探测优先级：
+# 1. 命令行参数 --nuxmv-path
+# 2. 环境变量 NUXMV_PATH (若外部环境已配置)
+# 3. 系统 PATH (which nuxmv / nuXmv)
+# 4. 与代码仓库平级的 tools 目录 (../tools/nuxmv/nuxmv)
+# 5. 仓库内部的 tools 目录 (./tools/nuxmv/nuxmv)
+# 6. 本地自定义路径 CUSTOM_NUXMV_PATH (若手动指定)
+# ==============================================================================
+CUSTOM_NUXMV_PATH = ""
+
+
+def determine_next_sample_directory(
+    base_runs_directory: Path,
+    system_name: str,
+    explicit_sample_name: str | None = None,
+) -> Path:
+    """计算当前实验的 sample 归档目录，统一存放在 runs/<system_name>/sampleX。"""
+    system_runs_directory = base_runs_directory / system_name
+    system_runs_directory.mkdir(parents=True, exist_ok=True)
+
+    # 业务意图：如果用户显式指定了 sample 目录名称，直接使用该名称
+    if explicit_sample_name:
+        return system_runs_directory / explicit_sample_name
+
+    # 业务意图：扫描已有的 sample_X 文件夹，提取已有数字编号
+    existing_sample_numbers: list[int] = []
+    for item in system_runs_directory.iterdir():
+        if not item.is_dir():
+            continue
+        if not item.name.startswith("sample_"):
+            continue
+
+        sample_suffix = item.name.replace("sample_", "")
+        if sample_suffix.isdigit():
+            existing_sample_numbers.append(int(sample_suffix))
+
+    # 业务意图：若还没有任何 sample 目录，从 1 开始编号
+    if not existing_sample_numbers:
+        return system_runs_directory / "sample_1"
+
+    # 业务意图：在已有最大编号基础上递增 1
+    next_sample_number = max(existing_sample_numbers) + 1
+    return system_runs_directory / f"sample_{next_sample_number}"
+
+
+def get_system_paths(
+    repository_root: Path,
+    system_name: str,
+) -> tuple[Path, Path, Path]:
+    """根据系统名称获取需求文件、接口文件和 Gold CTL 规约文件路径。"""
+    benchmark_system_directory = repository_root / "benchmarks" / "fsm_bench_20_fv" / system_name
+    raw_dataset_file = (
+        repository_root
+        / "llm-fsm-local-benchmark-v1.1.0"
+        / "cesar-andress-llm-fsm-local-benchmark-66b81c2"
+        / "dataset"
+        / "systems"
+        / f"{system_name}.json"
+    )
+
+    # 业务意图：优先使用 benchmark 目录下的需求文件，若不存在则回退至原始数据集
+    system_file = benchmark_system_directory / f"{system_name}.json"
+    if not system_file.exists():
+        system_file = raw_dataset_file
+
+    # 接口文件和形式化规约固定在 benchmarks/fsm_bench_20_fv/<system_name> 之下
+    interface_file = benchmark_system_directory / "system_interface.json"
+    properties_file = benchmark_system_directory / "oracle" / "gold_properties.json"
+
+    return system_file, interface_file, properties_file
+
+
+def is_valid_nuxmv_executable(candidate_path: str | Path | None) -> bool:
+    """业务意图：验证 candidate_path 是否是真实存在且能成功运行的 nuXmv 可执行程序。"""
+    if not candidate_path:
+        return False
+
+    resolved_path = str(candidate_path)
+    # 卫语句：检查文件是否存在以及是否有可执行权限
+    if not os.path.exists(resolved_path) or not os.access(resolved_path, os.X_OK):
+        return False
+
+    try:
+        # 运行轻量级探测指令 (nuXmv -help)
+        probe_result = subprocess.run(
+            [resolved_path, "-help"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            timeout=3,
+            text=True,
+        )
+        combined_output = probe_result.stdout + probe_result.stderr
+        # 只要输出中包含官方标识 nuXmv，说明程序真实可用
+        return "nuXmv" in combined_output
+    except Exception:
+        return False
+
+
+def find_nuxmv_executable(custom_path: str | None = None) -> str:
+    """跨平台寻找可用的 nuXmv 执行程序路径 (同时兼容 macOS 与 WSL/Linux)。"""
+    # 业务意图 1：优先使用命令行参数显式指定的路径
+    if is_valid_nuxmv_executable(custom_path):
+        return str(custom_path)
+
+    # 业务意图 2：检查环境变量 NUXMV_PATH
     env_path = os.environ.get("NUXMV_PATH")
-    if env_path and os.path.exists(env_path):
-        return env_path
+    if is_valid_nuxmv_executable(env_path):
+        return str(env_path)
 
-    # 业务意图：检查系统标准 PATH 中的 nuxmv
-    which_path = shutil.which("nuxmv") or shutil.which("nuXmv")
-    if which_path:
-        return which_path
+    # 业务意图 3：优先探测官方大写命名 nuXmv (WSL 与 macOS 均天生支持)
+    official_nuxmv = shutil.which("nuXmv")
+    if is_valid_nuxmv_executable(official_nuxmv):
+        return str(official_nuxmv)
 
-    # 业务意图：回退检查本机 CodeBase tools 下的默认安装路径
-    fallback_path = "/Users/macbookair/Desktop/CodeBase/tools/nuxmv/nuxmv"
-    if os.path.exists(fallback_path):
-        return fallback_path
+    # 业务意图 4：兜底探测小写命名 nuxmv
+    lowercase_nuxmv = shutil.which("nuxmv")
+    if is_valid_nuxmv_executable(lowercase_nuxmv):
+        return str(lowercase_nuxmv)
 
+    # 业务意图 5：检查与项目代码仓库平级的 tools 目录 (../tools/nuxmv/nuXmv 或 nuxmv)
+    repository_root = Path(__file__).resolve().parent.parent
+    for name in ["nuXmv", "nuxmv"]:
+        sibling_tools_path = repository_root.parent / "tools" / "nuxmv" / name
+        if is_valid_nuxmv_executable(sibling_tools_path):
+            return str(sibling_tools_path)
+
+    # 业务意图 6：检查项目仓库内部的 tools 目录 (./tools/nuxmv/nuXmv 或 nuxmv)
+    for name in ["nuXmv", "nuxmv"]:
+        repo_tools_path = repository_root / "tools" / "nuxmv" / name
+        if is_valid_nuxmv_executable(repo_tools_path):
+            return str(repo_tools_path)
+
+    # 业务意图 7：检查脚本顶部用户手动配置的 CUSTOM_NUXMV_PATH
+    if is_valid_nuxmv_executable(CUSTOM_NUXMV_PATH):
+        return str(CUSTOM_NUXMV_PATH)
+
+    # 业务意图 8：所有跨平台探测均未命中，提供清晰的报错和配置指引
     raise FileNotFoundError(
-        "未找到 nuXmv 可执行程序，请指定 --nuxmv-path 或配置 NUXMV_PATH 环境变量"
+        "\n[!] 未能自动定位到可用的 nuXmv 求解器！请通过以下任意一种方式配置 (兼容 macOS 与 WSL/Linux)：\n"
+        "    1. 确保 nuXmv 所在目录在系统 PATH 中 (which nuXmv 能输出有效路径)\n"
+        "    2. 设置环境变量: export NUXMV_PATH=/path/to/nuXmv\n"
+        "    3. 放置在与项目平级的 tools 目录: ../tools/nuxmv/nuXmv\n"
+        "    4. 运行脚本时传入命令行参数: --nuxmv-path /path/to/nuXmv\n"
+        "    5. 在 scripts/run_pilot_experiment.py 顶部的 CUSTOM_NUXMV_PATH 中填写"
     )
 
 
@@ -475,7 +658,7 @@ def execute_experiment(
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="FSM-Bench-20 自动售货机主实验脚本 (Treatment vs Baseline)"
+        description="FSM-Bench-20 主实验脚本 (Treatment vs Baseline，支持多系统一维数组配置与 sample 自增归档)"
     )
 
     parser.add_argument(
@@ -493,24 +676,38 @@ def main() -> None:
     )
 
     parser.add_argument(
+        "--systems",
+        type=str,
+        default=None,
+        help="指定待运行的系统名列表，逗号分隔 (可选，默认读取脚本顶部的 ACTIVE_BENCHMARK_SYSTEMS)",
+    )
+
+    parser.add_argument(
+        "--sample-id",
+        type=str,
+        default=None,
+        help="指定输出 sample 目录名称 (如 'sample_1'，默认自动扫描并递增编号)",
+    )
+
+    parser.add_argument(
         "--model",
         type=str,
-        default=os.environ.get("MODEL_NAME", "deepseek-chat"),
-        help="调用的大模型名称 (如 deepseek-chat, gpt-4o 等)",
+        default=LLM_SETTINGS["model_name"],
+        help=f"调用的大模型名称 (默认: {LLM_SETTINGS['model_name']})",
     )
 
     parser.add_argument(
         "--api-key",
         type=str,
-        default=os.environ.get("OPENAI_API_KEY", ""),
-        help="OpenAI 兼容接口 API Key",
+        default=LLM_SETTINGS["api_key"],
+        help="OpenAI 兼容接口 API Key (默认读取脚本顶部配置)",
     )
 
     parser.add_argument(
         "--base-url",
         type=str,
-        default=os.environ.get("OPENAI_BASE_URL", "https://api.openai.com/v1"),
-        help="OpenAI 兼容接口 Base URL",
+        default=LLM_SETTINGS["base_url"],
+        help=f"OpenAI 兼容接口 Base URL (默认: {LLM_SETTINGS['base_url']})",
     )
 
     parser.add_argument(
@@ -531,10 +728,16 @@ def main() -> None:
         "--output-dir",
         type=Path,
         default=None,
-        help="产物输出目录 (默认按当前时间戳生成)",
+        help="自定义产物输出根目录 (默认归档在项目根目录 runs/<system>/sampleX)",
     )
 
     args = parser.parse_args()
+
+    # 卫语句 1：检查是否已在脚本顶部填入或传入有效的 API Key
+    if not args.api_key or args.api_key == "YOUR_API_KEY_HERE":
+        print("\n[!] 提示: 请在 scripts/run_pilot_experiment.py 顶部的 LLM_SETTINGS 中填入你的 api_key 后再次运行！")
+        print("    例如: LLM_SETTINGS = {'api_key': 'sk-xxxxxx', ...}")
+        sys.exit(1)
 
     # 业务意图：解析流水线阶段一维数组
     if args.pipeline:
@@ -545,37 +748,76 @@ def main() -> None:
         else:
             pipeline_stages = ["generate", "verify", "repair"]
 
-    # 业务意图：寻找 nuXmv 路径
+    # 业务意图：如果包含形式化验证，预先寻找并验证 nuXmv 可执行路径
     nuxmv_path = ""
     if "verify" in pipeline_stages:
         nuxmv_path = find_nuxmv_executable(args.nuxmv_path)
 
-    # 路径规范
-    base_dir = Path("benchmarks/fsm_bench_20_fv/vending_machine")
-    system_file = Path("llm-fsm-local-benchmark-v1.1.0/cesar-andress-llm-fsm-local-benchmark-66b81c2/dataset/systems/vending_machine.json")
-    schema_file = Path("schema/efsm.schema.json")
-    interface_file = base_dir / "system_interface.json"
-    properties_file = base_dir / "oracle" / "gold_properties.json"
-
-    if args.output_dir:
-        output_dir = args.output_dir
+    # 业务意图：确定当前批次要运行的系统列表
+    if args.systems:
+        systems_to_run = [item.strip() for item in args.systems.split(",") if item.strip()]
     else:
-        timestamp_str = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-        output_dir = base_dir / "runs" / f"{args.mode}_{timestamp_str}"
+        systems_to_run = list(ACTIVE_BENCHMARK_SYSTEMS)
 
-    execute_experiment(
-        pipeline_stages=pipeline_stages,
-        system_file=system_file,
-        schema_file=schema_file,
-        interface_file=interface_file,
-        properties_file=properties_file,
-        output_dir=output_dir,
-        model_name=args.model,
-        api_key=args.api_key,
-        base_url=args.base_url,
-        max_repair_rounds=args.max_repair_rounds,
-        nuxmv_executable=nuxmv_path,
-    )
+    # 卫语句 2：检查系统列表是否为空
+    if not systems_to_run:
+        print("\n[!] 提示: ACTIVE_BENCHMARK_SYSTEMS 列表为空，没有指定任何要运行的系统！")
+        print("    请在 scripts/run_pilot_experiment.py 顶部取消注释至少一个系统 (例如 'vending_machine')。")
+        sys.exit(1)
+
+    repository_root = Path(__file__).resolve().parent.parent
+    schema_file = repository_root / "schema" / "efsm.schema.json"
+    base_runs_root = args.output_dir if args.output_dir else (repository_root / "runs")
+
+    print(f"\n[*] 准备执行 Benchmark 任务，总共配置了 {len(systems_to_run)} 个系统: {systems_to_run}")
+
+    for system_name in systems_to_run:
+        print(f"\n{'=' * 65}")
+        print(f"[*] 开始处理系统: {system_name}")
+        print(f"{'=' * 65}")
+
+        system_file, interface_file, properties_file = get_system_paths(
+            repository_root=repository_root,
+            system_name=system_name,
+        )
+
+        # 卫语句 3：检查系统需求文件是否存在
+        if not system_file.exists():
+            print(f"[跳过] 系统 '{system_name}' 的需求文件不存在: {system_file}，跳过此系统。")
+            continue
+
+        # 卫语句 4：如果流水线启用了形式化验证，检查规约文件是否存在
+        if "verify" in pipeline_stages and not properties_file.exists():
+            print(f"[跳过] 系统 '{system_name}' 尚未配置 Gold CTL 规约文件: {properties_file}")
+            print(f"       (当前仅 vending_machine 已就绪，其他系统规约正在开发中)，自动跳过此系统。")
+            continue
+
+        # 卫语句 5：如果流水线启用了形式化验证，检查接口定义文件是否存在
+        if "verify" in pipeline_stages and not interface_file.exists():
+            print(f"[跳过] 系统 '{system_name}' 缺少接口定义文件: {interface_file}，跳过此系统。")
+            continue
+
+        # 业务意图：计算 sample 存放目录，统一归档在 runs/<system_name>/sampleX
+        system_output_dir = determine_next_sample_directory(
+            base_runs_directory=base_runs_root,
+            system_name=system_name,
+            explicit_sample_name=args.sample_id,
+        )
+        print(f"[*] 实验输出目录: {system_output_dir}")
+
+        execute_experiment(
+            pipeline_stages=pipeline_stages,
+            system_file=system_file,
+            schema_file=schema_file,
+            interface_file=interface_file,
+            properties_file=properties_file,
+            output_dir=system_output_dir,
+            model_name=args.model,
+            api_key=args.api_key,
+            base_url=args.base_url,
+            max_repair_rounds=args.max_repair_rounds,
+            nuxmv_executable=nuxmv_path,
+        )
 
 
 if __name__ == "__main__":
