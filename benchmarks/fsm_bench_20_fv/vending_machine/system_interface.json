@@ -1,4 +1,34 @@
 {
+  "states": [
+    "Idle",
+    "CreditAvailable",
+    "Dispensing"
+  ],
+  "initial_state": "Idle",
+  "events": [
+    "insert_coin",
+    "press_coffee",
+    "press_tea",
+    "cancel",
+    "dispense_complete"
+  ],
+  "variables": [
+    {
+      "name": "creditStored",
+      "type": "boolean",
+      "initial": false
+    },
+    {
+      "name": "selectedDrink",
+      "type": "enum",
+      "values": [
+        "NONE",
+        "COFFEE",
+        "TEA"
+      ],
+      "initial": "NONE"
+    }
+  ],
   "output_events": [
     "DISPENSE_COFFEE",
     "DISPENSE_TEA",

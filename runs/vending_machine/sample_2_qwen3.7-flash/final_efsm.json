@@ -1,8 +1,4 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://example.org/efsm.schema.json",
-  "title": "Extended EFSM Schema (IR v2)",
-  "description": "JSON representation of an Extended Finite State Machine, fused with FSM-Bench-20.",
   "name": "Drink Vending Machine",
   "system_name": "Drink Vending Machine",
   "domain": "vending machine",
@@ -43,7 +39,8 @@
       "event": "insert_coin",
       "target": "CreditAvailable",
       "updates": {
-        "creditStored": "true"
+        "creditStored": "true",
+        "selectedDrink": "NONE"
       },
       "requirement": "R2"
     },
@@ -76,9 +73,6 @@
       "outputs": [
         "REJECT_COIN"
       ],
-      "updates": {
-        "creditStored": "true"
-      },
       "requirement": "R12"
     },
     {
@@ -86,12 +80,12 @@
       "source": "CreditAvailable",
       "event": "press_coffee",
       "target": "Dispensing",
-      "outputs": [
-        "DISPENSE_COFFEE"
-      ],
       "updates": {
         "selectedDrink": "COFFEE"
       },
+      "outputs": [
+        "DISPENSE_COFFEE"
+      ],
       "requirement": "R3"
     },
     {
@@ -99,12 +93,12 @@
       "source": "CreditAvailable",
       "event": "press_tea",
       "target": "Dispensing",
-      "outputs": [
-        "DISPENSE_TEA"
-      ],
       "updates": {
         "selectedDrink": "TEA"
       },
+      "outputs": [
+        "DISPENSE_TEA"
+      ],
       "requirement": "R4"
     },
     {

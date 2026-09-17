@@ -1,1 +1,13 @@
-/home/zeqing/miniconda3/bin/python: can't open file '/home/zeqing/projects/efsm-nuxmv-poc/scripts/src/efsm_to_smv.py': [Errno 2] No such file or directory
+Traceback (most recent call last):
+  File "/Users/macbookair/Desktop/CodeBase/Efsm-nuxmv-poc/src/efsm_to_smv.py", line 463, in <module>
+    main()
+    ~~~~^^
+  File "/Users/macbookair/Desktop/CodeBase/Efsm-nuxmv-poc/src/efsm_to_smv.py", line 415, in main
+    validate_structure(model, schema)
+    ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "/Users/macbookair/Desktop/CodeBase/Efsm-nuxmv-poc/src/efsm_to_smv.py", line 39, in validate_structure
+    raise ValueError(
+    ...<2 lines>...
+    )
+ValueError: Schema validation failed:
+  - <root>: Additional properties are not allowed ('$id', '$schema', 'description', 'title' were unexpected)

@@ -1,6 +1,4 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://example.org/efsm.schema.json",
   "title": "Extended EFSM Schema (IR v2)",
   "description": "JSON representation of an Extended Finite State Machine, fused with FSM-Bench-20.",
   "type": "object",

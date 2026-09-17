@@ -1,0 +1,27 @@
+{
+  "timestamp": "2026-09-17T22:39:18.582125",
+  "model": "qwen/qwen3.7-flash",
+  "pipeline_stages": [
+    "generate",
+    "verify",
+    "repair"
+  ],
+  "rounds": [
+    {
+      "round": 0,
+      "passed_properties": 18,
+      "failed_properties": 4,
+      "all_passed": false
+    },
+    {
+      "round": 1,
+      "passed_properties": 22,
+      "failed_properties": 0,
+      "all_passed": true
+    }
+  ],
+  "success": true,
+  "total_rounds": 1,
+  "converged_at_round": 1,
+  "final_efsm_path": "/Users/macbookair/Desktop/CodeBase/Efsm-nuxmv-poc/runs/vending_machine/sample_2/final_efsm.json"
+}

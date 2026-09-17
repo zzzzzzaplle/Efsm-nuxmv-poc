@@ -1,0 +1,122 @@
+-- Generated from EFSM: Drink Vending Machine
+MODULE main
+
+VAR
+  event : {NONE, insert_coin, press_coffee, press_tea, cancel, dispense_complete};
+  state : {Idle, CreditAvailable, Dispensing};
+  creditStored : boolean;
+  selectedDrink : {NONE, COFFEE, TEA};
+
+DEFINE
+  emit_DISPENSE_COFFEE := (state = CreditAvailable & event = press_coffee);
+  emit_DISPENSE_TEA := (state = CreditAvailable & event = press_tea);
+  emit_RETURN_COIN := (state = CreditAvailable & event = cancel);
+  emit_REJECT_COIN := (state = CreditAvailable & event = insert_coin);
+
+ASSIGN
+  init(event) := {NONE, insert_coin, press_coffee, press_tea, cancel, dispense_complete};
+  next(event) := {NONE, insert_coin, press_coffee, press_tea, cancel, dispense_complete};
+
+  init(state) := Idle;
+  next(state) :=
+    case
+      state = Idle & event = insert_coin : CreditAvailable; -- T1
+      state = Idle & event = press_coffee : Idle; -- T2
+      state = Idle & event = press_tea : Idle; -- T3
+      state = Idle & event = cancel : Idle; -- T4
+      state = CreditAvailable & event = insert_coin : CreditAvailable; -- T5
+      state = CreditAvailable & event = press_coffee : Dispensing; -- T6
+      state = CreditAvailable & event = press_tea : Dispensing; -- T7
+      state = CreditAvailable & event = cancel : Idle; -- T8
+      state = Dispensing & event = press_coffee : Dispensing; -- T9
+      state = Dispensing & event = press_tea : Dispensing; -- T10
+      state = Dispensing & event = cancel : Dispensing; -- T11
+      state = Dispensing & event = dispense_complete : Idle; -- T12
+      TRUE : state;
+    esac;
+
+  init(creditStored) := FALSE;
+  next(creditStored) :=
+    case
+      state = Idle & event = insert_coin : TRUE; -- T1
+      state = CreditAvailable & event = insert_coin : TRUE; -- T5
+      state = CreditAvailable & event = cancel : FALSE; -- T8
+      state = Dispensing & event = dispense_complete : FALSE; -- T12
+      TRUE : creditStored;
+    esac;
+
+  init(selectedDrink) := NONE;
+  next(selectedDrink) :=
+    case
+      state = CreditAvailable & event = press_coffee : COFFEE; -- T6
+      state = CreditAvailable & event = press_tea : TEA; -- T7
+      state = CreditAvailable & event = cancel : NONE; -- T8
+      state = Dispensing & event = dispense_complete : NONE; -- T12
+      TRUE : selectedDrink;
+    esac;
+
+-- P1: R1: the initial configuration is Idle with no credit and no selected drink.
+CTLSPEC state = Idle & !creditStored & selectedDrink = NONE
+
+-- P2: Idle always represents the absence of an active transaction.
+CTLSPEC AG (state = Idle -> (!creditStored & selectedDrink = NONE))
+
+-- P3: CreditAvailable always stores exactly one uncommitted credit.
+CTLSPEC AG (state = CreditAvailable -> (creditStored & selectedDrink = NONE))
+
+-- P4: Dispensing always has paid credit and exactly one selected drink.
+CTLSPEC AG (state = Dispensing -> (creditStored & (selectedDrink = COFFEE | selectedDrink = TEA)))
+
+-- P5: R2: a valid coin in Idle creates one credit and enters CreditAvailable.
+CTLSPEC AG ((state = Idle & event = insert_coin) -> AX (state = CreditAvailable & creditStored & selectedDrink = NONE))
+
+-- P6: R3: a paid coffee selection emits coffee and starts coffee dispensing.
+CTLSPEC AG ((state = CreditAvailable & event = press_coffee) -> (emit_DISPENSE_COFFEE & !emit_DISPENSE_TEA & AX (state = Dispensing & creditStored & selectedDrink = COFFEE)))
+
+-- P7: R4: a paid tea selection emits tea and starts tea dispensing.
+CTLSPEC AG ((state = CreditAvailable & event = press_tea) -> (emit_DISPENSE_TEA & !emit_DISPENSE_COFFEE & AX (state = Dispensing & creditStored & selectedDrink = TEA)))
+
+-- P8: R5: drink buttons in Idle produce no drink and leave the machine in Idle.
+CTLSPEC AG ((state = Idle & (event = press_coffee | event = press_tea)) -> (!emit_DISPENSE_COFFEE & !emit_DISPENSE_TEA & AX (state = Idle & !creditStored & selectedDrink = NONE)))
+
+-- P9: R6: dispense completion clears the transaction and returns to Idle.
+CTLSPEC AG ((state = Dispensing & event = dispense_complete) -> AX (state = Idle & !creditStored & selectedDrink = NONE))
+
+-- P10: R7: cancelling stored credit returns the coin and clears the transaction.
+CTLSPEC AG ((state = CreditAvailable & event = cancel) -> (emit_RETURN_COIN & AX (state = Idle & !creditStored & selectedDrink = NONE)))
+
+-- P11: R8: cancelling in Idle returns no coin and leaves the machine in Idle.
+CTLSPEC AG ((state = Idle & event = cancel) -> (!emit_RETURN_COIN & AX (state = Idle & !creditStored & selectedDrink = NONE)))
+
+-- P12: R11: no drink output may occur without stored credit.
+CTLSPEC AG ((emit_DISPENSE_COFFEE | emit_DISPENSE_TEA) -> creditStored)
+
+-- P13: R12: an additional coin is rejected while the original credit is retained.
+CTLSPEC AG ((state = CreditAvailable & event = insert_coin) -> (emit_REJECT_COIN & AX (state = CreditAvailable & creditStored & selectedDrink = NONE)))
+
+-- P14: R9 and R10: a transaction cannot start a second drink dispense.
+CTLSPEC AG (state = Dispensing -> (!emit_DISPENSE_COFFEE & !emit_DISPENSE_TEA))
+
+-- P15: R9 and R10: drink buttons cannot replace an in-progress coffee selection.
+CTLSPEC AG ((state = Dispensing & selectedDrink = COFFEE & (event = press_coffee | event = press_tea)) -> AX (state = Dispensing & creditStored & selectedDrink = COFFEE))
+
+-- P16: R9 and R10: drink buttons cannot replace an in-progress tea selection.
+CTLSPEC AG ((state = Dispensing & selectedDrink = TEA & (event = press_coffee | event = press_tea)) -> AX (state = Dispensing & creditStored & selectedDrink = TEA))
+
+-- P17: R13: cancel is ignored while coffee is being dispensed.
+CTLSPEC AG ((state = Dispensing & selectedDrink = COFFEE & event = cancel) -> (!emit_RETURN_COIN & AX (state = Dispensing & creditStored & selectedDrink = COFFEE)))
+
+-- P18: R13: cancel is ignored while tea is being dispensed.
+CTLSPEC AG ((state = Dispensing & selectedDrink = TEA & event = cancel) -> (!emit_RETURN_COIN & AX (state = Dispensing & creditStored & selectedDrink = TEA)))
+
+-- P19: Coffee output occurs only for a paid coffee selection.
+CTLSPEC AG (emit_DISPENSE_COFFEE -> (state = CreditAvailable & event = press_coffee & creditStored))
+
+-- P20: Tea output occurs only for a paid tea selection.
+CTLSPEC AG (emit_DISPENSE_TEA -> (state = CreditAvailable & event = press_tea & creditStored))
+
+-- P21: Coin return occurs only when cancelling a stored credit.
+CTLSPEC AG (emit_RETURN_COIN -> (state = CreditAvailable & event = cancel & creditStored))
+
+-- P22: Coin rejection occurs only for an additional coin when credit is already stored.
+CTLSPEC AG (emit_REJECT_COIN -> (state = CreditAvailable & event = insert_coin & creditStored))

@@ -3,7 +3,7 @@ import json
 import unittest
 from pathlib import Path
 
-
+# 测试了
 ROOT = Path(__file__).resolve().parents[1]
 MODULE_PATH = ROOT / "src" / "efsm_to_smv.py"
 SPEC = importlib.util.spec_from_file_location("efsm_to_smv", MODULE_PATH)
@@ -79,6 +79,14 @@ class OutputEncodingTests(unittest.TestCase):
                 candidate,
                 declared_outputs=set(self.interface["output_events"]),
             )
+
+    def test_smv_expression_sanitization(self) -> None:
+        raw_guard = "creditStored == true && selectedDrink == NONE || flag == false"
+        sanitized = MODULE.sanitize_smv_expression(raw_guard)
+        self.assertEqual(
+            sanitized,
+            "creditStored = TRUE & selectedDrink = NONE | flag = FALSE",
+        )
 
 
 if __name__ == "__main__":

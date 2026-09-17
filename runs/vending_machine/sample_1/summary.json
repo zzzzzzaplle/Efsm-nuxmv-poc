@@ -1,0 +1,21 @@
+{
+  "timestamp": "2026-09-17T22:19:35.157348",
+  "model": "qwen/qwen3.7-flash",
+  "pipeline_stages": [
+    "generate",
+    "verify",
+    "repair"
+  ],
+  "rounds": [
+    {
+      "round": 0,
+      "passed_properties": 0,
+      "failed_properties": 0,
+      "all_passed": false
+    }
+  ],
+  "success": false,
+  "total_rounds": 0,
+  "error": "Traceback (most recent call last):\n  File \"/Users/macbookair/Desktop/CodeBase/Efsm-nuxmv-poc/src/efsm_to_smv.py\", line 463, in <module>\n    main()\n    ~~~~^^\n  File \"/Users/macbookair/Desktop/CodeBase/Efsm-nuxmv-poc/src/efsm_to_smv.py\", line 415, in main\n    validate_structure(model, schema)\n    ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^\n  File \"/Users/macbookair/Desktop/CodeBase/Efsm-nuxmv-poc/src/efsm_to_smv.py\", line 39, in validate_structure\n    raise ValueError(\n    ...<2 lines>...\n    )\nValueError: Schema validation failed:\n  - <root>: Additional properties are not allowed ('$id', '$schema', 'description', 'title' were unexpected)",
+  "final_efsm_path": "/Users/macbookair/Desktop/CodeBase/Efsm-nuxmv-poc/runs/vending_machine/sample_1/final_efsm.json"
+}

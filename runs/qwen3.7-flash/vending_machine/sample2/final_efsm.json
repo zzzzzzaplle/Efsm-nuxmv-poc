@@ -1,17 +1,10 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://example.org/efsm.schema.json",
-  "title": "Extended EFSM Schema (IR v2)",
-  "description": "JSON representation of an Extended Finite State Machine, fused with FSM-Bench-20.",
-  "name": "Drink Vending Machine",
-  "system_name": "Drink Vending Machine",
-  "domain": "vending machine",
-  "initial_state": "Idle",
   "states": [
     "Idle",
     "CreditAvailable",
     "Dispensing"
   ],
+  "initial_state": "Idle",
   "events": [
     "insert_coin",
     "press_coffee",
@@ -19,6 +12,8 @@
     "cancel",
     "dispense_complete"
   ],
+  "system_name": "Drink Vending Machine",
+  "domain": "vending machine",
   "variables": [
     {
       "name": "creditStored",
@@ -38,7 +33,6 @@
   ],
   "transitions": [
     {
-      "id": "T1",
       "source": "Idle",
       "event": "insert_coin",
       "target": "CreditAvailable",
@@ -48,81 +42,91 @@
       "requirement": "R2"
     },
     {
-      "id": "T2",
       "source": "Idle",
       "event": "press_coffee",
       "target": "Idle",
       "requirement": "R5"
     },
     {
-      "id": "T3",
       "source": "Idle",
       "event": "press_tea",
       "target": "Idle",
       "requirement": "R5"
     },
     {
-      "id": "T4",
       "source": "Idle",
       "event": "cancel",
       "target": "Idle",
       "requirement": "R8"
     },
     {
-      "id": "T5",
       "source": "CreditAvailable",
       "event": "insert_coin",
       "target": "CreditAvailable",
-      "outputs": [
-        "REJECT_COIN"
-      ],
       "updates": {
         "creditStored": "true"
       },
+      "outputs": [
+        "REJECT_COIN"
+      ],
       "requirement": "R12"
     },
     {
-      "id": "T6",
       "source": "CreditAvailable",
       "event": "press_coffee",
       "target": "Dispensing",
-      "outputs": [
-        "DISPENSE_COFFEE"
-      ],
       "updates": {
         "selectedDrink": "COFFEE"
       },
+      "outputs": [
+        "DISPENSE_COFFEE"
+      ],
       "requirement": "R3"
     },
     {
-      "id": "T7",
       "source": "CreditAvailable",
       "event": "press_tea",
       "target": "Dispensing",
-      "outputs": [
-        "DISPENSE_TEA"
-      ],
       "updates": {
         "selectedDrink": "TEA"
       },
+      "outputs": [
+        "DISPENSE_TEA"
+      ],
       "requirement": "R4"
     },
     {
-      "id": "T8",
       "source": "CreditAvailable",
       "event": "cancel",
       "target": "Idle",
-      "outputs": [
-        "RETURN_COIN"
-      ],
       "updates": {
         "creditStored": "false",
         "selectedDrink": "NONE"
       },
+      "outputs": [
+        "RETURN_COIN"
+      ],
       "requirement": "R7"
     },
     {
-      "id": "T9",
+      "source": "Dispensing",
+      "event": "press_coffee",
+      "target": "Dispensing",
+      "requirement": "R9"
+    },
+    {
+      "source": "Dispensing",
+      "event": "press_tea",
+      "target": "Dispensing",
+      "requirement": "R9"
+    },
+    {
+      "source": "Dispensing",
+      "event": "cancel",
+      "target": "Dispensing",
+      "requirement": "R13"
+    },
+    {
       "source": "Dispensing",
       "event": "dispense_complete",
       "target": "Idle",
@@ -131,27 +135,6 @@
         "selectedDrink": "NONE"
       },
       "requirement": "R6"
-    },
-    {
-      "id": "T10",
-      "source": "Dispensing",
-      "event": "press_coffee",
-      "target": "Dispensing",
-      "requirement": "R9"
-    },
-    {
-      "id": "T11",
-      "source": "Dispensing",
-      "event": "press_tea",
-      "target": "Dispensing",
-      "requirement": "R9"
-    },
-    {
-      "id": "T12",
-      "source": "Dispensing",
-      "event": "cancel",
-      "target": "Dispensing",
-      "requirement": "R13"
     }
   ]
 }

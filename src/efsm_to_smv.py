@@ -2,6 +2,7 @@
 
 import argparse
 import json
+import re
 from pathlib import Path
 from typing import Any
 
@@ -117,6 +118,34 @@ def validate_semantics(
         )
 
 
+def sanitize_smv_expression(expression: str) -> str:
+    """业务意图：将通用编程语言表达式规范化为严格的 SMV 语法。
+    
+    规则：
+    1. '==' 转换为 '=' (SMV 判等运算符为单等号)
+    2. '&&' 转换为 '&' (SMV 逻辑与运算符为单与号)
+    3. '||' 转换为 '|' (SMV 逻辑或运算符为单竖线)
+    4. 全词匹配将 'true' / 'false' 替换为大写 'TRUE' / 'FALSE'
+    """
+    if not expression:
+        return "TRUE"
+
+    sanitized_text = expression.strip()
+    if sanitized_text == "TRUE":
+        return "TRUE"
+
+    # 业务意图：规范化操作符
+    sanitized_text = sanitized_text.replace("==", "=")
+    sanitized_text = sanitized_text.replace("&&", "&")
+    sanitized_text = sanitized_text.replace("||", "|")
+
+    # 业务意图：全词规范化布尔常量
+    sanitized_text = re.sub(r"\btrue\b", "TRUE", sanitized_text, flags=re.IGNORECASE)
+    sanitized_text = re.sub(r"\bfalse\b", "FALSE", sanitized_text, flags=re.IGNORECASE)
+
+    return sanitized_text
+
+
 def transition_condition(
     transition: dict[str, Any],
 ) -> str:
@@ -128,9 +157,13 @@ def transition_condition(
 
     guard = transition.get("guard")
 
-    if guard and guard != "TRUE":
-        smv_guard = guard.replace("==", "=")
-        conditions.append(f"({smv_guard})")
+    # 卫语句：若 Guard 为空或为 TRUE，无需额外追加判断
+    if not guard or guard == "TRUE":
+        return " & ".join(conditions)
+
+    # 业务意图：将模型生成的通用 Guard 条件清洗为合法 SMV 表达式
+    smv_guard = sanitize_smv_expression(guard)
+    conditions.append(f"({smv_guard})")
 
     return " & ".join(conditions)
 
@@ -140,7 +173,13 @@ def smv_initial_value(value: bool | int | str) -> str:
     if isinstance(value, bool):
         return "TRUE" if value else "FALSE"
 
-    return str(value)
+    raw_text = str(value).strip()
+    if raw_text.lower() == "true":
+        return "TRUE"
+    if raw_text.lower() == "false":
+        return "FALSE"
+
+    return raw_text
 
 
 def infer_output_events(model: dict[str, Any]) -> list[str]:
@@ -273,10 +312,11 @@ def generate_smv(
 
             condition = transition_condition(transition)
             trans_id = transition.get("id") or f"T{idx}"
+            update_value = sanitize_smv_expression(str(updates[variable_name]))
 
             lines.append(
                 f"      {condition} : "
-                f"{updates[variable_name]}; "
+                f"{update_value}; "
                 f"-- {trans_id}"
             )
 

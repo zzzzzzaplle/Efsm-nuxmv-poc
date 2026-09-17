@@ -39,32 +39,33 @@ from src.efsm_to_smv import (
 )
 
 # ==============================================================================
+# 模型实验输出目录名称配置
+# 可直接在此指定自定义简短别名 (如 "qwen3.7-flash", "deepseek-v4-flash")
+# 若留空 ""，将自动读取下方 LLM_SETTINGS["model_name"] 并自动提取目录名
+# ==============================================================================
+MODEL_OUTPUTNAME = ""
+
+# ==============================================================================
 # 用户模型与 API 配置区域 (无需配置系统环境变量，可直接在此填写与维护)
 # ==============================================================================
 LLM_SETTINGS = {
     # 1. 你的 API Key (直接在此填入，例如 "sk-xxxxxxxx")
     "api_key": "",
-
     # 2. 接口地址 (常见服务商见下方注释，默认使用 DeepSeek)
-    "base_url": "https://api.deepseek.com/v1",
-
+    "base_url": "https://openrouter.ai/api/v1",
     # 3. 目标模型名称 (如 deepseek-chat, qwen-plus, gpt-4o 等)
-    "model_name": "deepseek-v4-flash",
+    "model_name": "qwen/qwen3.7-flash",
+    #qwen/qwen3.7-flash,z-ai/glm-5.3-flash,google/gemma-4-26b-a4b-it:free
 }
 
 # 常见厂商配置参考 (可直接将上方 base_url 和 model_name 替换为以下值):
-# - DeepSeek:
-#     base_url:   "https://api.deepseek.com/v1"
-#     model_name: "deepseek-chat"
-# - 阿里通义千问 (DashScope):
-#     base_url:   "https://dashscope.aliyuncs.com/compatible-mode/v1"
-#     model_name: "qwen-plus" 或 "qwen-max"
-# - OpenAI:
-#     base_url:   "https://api.openai.com/v1"
-#     model_name: "gpt-4o" 或 "gpt-4o-mini"
-# - 月之暗面 (Moonshot / Kimi):
-#     base_url:   "https://api.moonshot.cn/v1"
-#     model_name: "moonshot-v1-8k"
+# - openrouter:
+#     base_url:   "https://openrouter.ai/api/v1"
+#     model_name: ""
+# - deepseek
+    #  "api_key": 
+    # "base_url": "https://api.deepseek.com/v1",
+    # "model_name": "deepseek-v4-flash",
 
 # ==============================================================================
 # 待运行的 Benchmark 系统列表 (一维数组配置)
@@ -106,38 +107,67 @@ ACTIVE_BENCHMARK_SYSTEMS = [
 CUSTOM_NUXMV_PATH = ""
 
 
+def resolve_model_output_name(configured_name: str, model_name: str) -> str:
+    """
+    确定模型在实验输出目录中的文件夹名称。
+    业务意图：优先使用用户配置的 MODEL_OUTPUTNAME；若为空，则自动取 model_name (去除斜杠前缀)。
+    """
+    # 卫语句 1：如果配置了 MODEL_OUTPUTNAME，优先使用
+    if configured_name and configured_name.strip():
+        return configured_name.strip()
+
+    # 卫语句 2：若未配置，自动取 model_name
+    # 业务意图：若包含斜杠 (如 'qwen/qwen3.7-flash')，提取最后一部分以避免产生多余层级的目录
+    clean_model_name = model_name.split("/")[-1].strip()
+    if clean_model_name:
+        return clean_model_name
+
+    return "default_model"
+
+
 def determine_next_sample_directory(
     base_runs_directory: Path,
+    model_output_name: str,
     system_name: str,
     explicit_sample_name: str | None = None,
 ) -> Path:
-    """计算当前实验的 sample 归档目录，统一存放在 runs/<system_name>/sampleX。"""
-    system_runs_directory = base_runs_directory / system_name
+    """计算当前实验的 sample 归档目录，统一存放在 runs/<model_name>/<system_name>/sampleX。"""
+    system_runs_directory = base_runs_directory / model_output_name / system_name
     system_runs_directory.mkdir(parents=True, exist_ok=True)
 
     # 业务意图：如果用户显式指定了 sample 目录名称，直接使用该名称
     if explicit_sample_name:
         return system_runs_directory / explicit_sample_name
 
-    # 业务意图：扫描已有的 sample_X 文件夹，提取已有数字编号
+    # 业务意图：扫描已有的 sampleX 文件夹，提取已有数字编号
     existing_sample_numbers: list[int] = []
     for item in system_runs_directory.iterdir():
         if not item.is_dir():
             continue
-        if not item.name.startswith("sample_"):
+        if not item.name.startswith("sample"):
             continue
 
-        sample_suffix = item.name.replace("sample_", "")
+        sample_suffix = item.name.replace("sample", "").lstrip("_")
         if sample_suffix.isdigit():
             existing_sample_numbers.append(int(sample_suffix))
 
-    # 业务意图：若还没有任何 sample 目录，从 1 开始编号
+    # 业务意图：若还没有任何 sample 目录，从 1 开始编号 (sample1)
     if not existing_sample_numbers:
-        return system_runs_directory / "sample_1"
+        return system_runs_directory / "sample1"
 
-    # 业务意图：在已有最大编号基础上递增 1
+    # 业务意图：在已有最大编号基础上递增 1 (sample2, sample3...)
     next_sample_number = max(existing_sample_numbers) + 1
-    return system_runs_directory / f"sample_{next_sample_number}"
+    return system_runs_directory / f"sample{next_sample_number}"
+
+
+def append_experiment_log(log_file_path: Path, message: str) -> None:
+    """
+    向当前实验 sample 的 log.txt 实时追加一行核心生命周期日志。
+    业务意图：同时在控制台输出并在文件系统中落盘，防止中途异常导致进度丢失。
+    """
+    print(message)
+    with log_file_path.open(mode="a", encoding="utf-8") as file:
+        file.write(message + "\n")
 
 
 def get_system_paths(
@@ -318,21 +348,41 @@ def build_initial_generation_prompt(
     domain = system_data.get("domain", "vending machine")
     requirements = system_data.get("requirements", [])
     requirements_text = "\n".join(requirements)
+
     allowed_outputs = interface_data.get("output_events", [])
+    expected_states = interface_data.get("states", [])
+    expected_initial_state = interface_data.get("initial_state", "")
+    expected_events = interface_data.get("events", [])
+    expected_variables = interface_data.get("variables", [])
+
+    interface_contract_lines = [
+        "System Interface Contract (You MUST strictly follow these signatures):",
+    ]
+    if expected_states:
+        interface_contract_lines.append(f"- States: {json.dumps(expected_states)}")
+    if expected_initial_state:
+        interface_contract_lines.append(f"- Initial State: '{expected_initial_state}'")
+    if expected_events:
+        interface_contract_lines.append(f"- Input Events: {json.dumps(expected_events)}")
+    if expected_variables:
+        interface_contract_lines.append(f"- State Variables: {json.dumps(expected_variables, indent=2)}")
+    if allowed_outputs:
+        interface_contract_lines.append(f"- Observable Output Signals: {json.dumps(allowed_outputs)}")
+
+    interface_contract_text = "\n".join(interface_contract_lines)
 
     system_prompt = (
         "You are an expert formal methods and state machine engineer.\n"
         "Your task is to convert natural-language software requirements into an Extended Finite State Machine (EFSM).\n"
         "Rules:\n"
         "1. Strictly conform to the provided JSON Schema.\n"
-        "2. Do NOT use legacy fields such as 'initialState', 'actions', or embedded 'properties'.\n"
-        "3. Use 'initial_state' for the starting state.\n"
-        "4. In transitions, use 'updates' (key-value dictionary) to modify variables.\n"
-        "5. In transitions, use 'outputs' (array of strings) to emit observable signals.\n"
-        f"   Allowed output signals are strictly limited to: {allowed_outputs}\n"
-        "6. Cite the requirement identifier (e.g. 'R2') in the 'requirement' field of each transition.\n"
-        "7. Ensure deterministic transitions: guards for the same (source, event) must be mutually disjoint.\n"
-        "8. Return ONLY valid JSON, without any commentary or markdown wrapper."
+        "2. You MUST strictly follow the System Interface Contract below:\n"
+        f"{interface_contract_text}\n"
+        "3. In transitions, use 'updates' (key-value dictionary) to modify variables.\n"
+        "4. In transitions, use 'outputs' (array of strings) to emit observable signals.\n"
+        "5. Cite the requirement identifier (e.g. 'R2') in the 'requirement' field of each transition.\n"
+        "6. Ensure deterministic transitions: guards for the same (source, event) must be mutually disjoint.\n"
+        "7. Return ONLY valid JSON, without any commentary or markdown wrapper."
     )
 
     user_prompt = (
@@ -340,6 +390,7 @@ def build_initial_generation_prompt(
         f"Domain: {domain}\n\n"
         "Requirements:\n"
         f"{requirements_text}\n\n"
+        f"{interface_contract_text}\n\n"
         "Target EFSM JSON Schema:\n"
         f"{json.dumps(schema_data, indent=2)}\n\n"
         "Please generate the complete EFSM model JSON for this system."
@@ -359,13 +410,33 @@ def build_repair_prompt(
 ) -> list[dict[str, str]]:
     """构建反例驱动修复提示词。"""
     allowed_outputs = interface_data.get("output_events", [])
+    expected_states = interface_data.get("states", [])
+    expected_initial_state = interface_data.get("initial_state", "")
+    expected_events = interface_data.get("events", [])
+    expected_variables = interface_data.get("variables", [])
+
+    interface_contract_lines = [
+        "System Interface Contract (Do NOT deviate from these signatures):",
+    ]
+    if expected_states:
+        interface_contract_lines.append(f"- States: {json.dumps(expected_states)}")
+    if expected_initial_state:
+        interface_contract_lines.append(f"- Initial State: '{expected_initial_state}'")
+    if expected_events:
+        interface_contract_lines.append(f"- Input Events: {json.dumps(expected_events)}")
+    if expected_variables:
+        interface_contract_lines.append(f"- State Variables: {json.dumps(expected_variables, indent=2)}")
+    if allowed_outputs:
+        interface_contract_lines.append(f"- Observable Output Signals: {json.dumps(allowed_outputs)}")
+
+    interface_contract_text = "\n".join(interface_contract_lines)
 
     system_prompt = (
         "You are an expert formal methods debugging engineer.\n"
         "Your previously generated EFSM failed formal verification or semantic validation.\n"
         "Analyze the provided counterexample execution trace and validation errors.\n"
         "Fix the transitions, guards, updates, or outputs to satisfy all requirements.\n"
-        f"Allowed outputs are strictly: {allowed_outputs}\n"
+        f"{interface_contract_text}\n"
         "Return ONLY the complete, repaired EFSM JSON."
     )
 
@@ -562,14 +633,19 @@ def execute_experiment(
     round_0_file.write_text(json.dumps(current_candidate_model, indent=2), encoding="utf-8")
     print(f"[+] 初始模型已保存至: {round_0_file}")
 
+    sample_log_file = output_dir / "log.txt"
+    if sample_log_file.exists():
+        sample_log_file.unlink()
+
     # =======================================================
     # 卫语句：若流水线不包含验证 (Baseline 模式)，生成完毕直接导出
     # =======================================================
     if "verify" not in pipeline_stages:
-        print("[*] 流水线未启用 'verify'，作为 Baseline 导出最终模型。")
+        append_experiment_log(sample_log_file, "[*] 流水线未启用 'verify'，作为 Baseline 导出最终模型。")
         final_efsm_file = output_dir / "final_efsm.json"
         final_efsm_file.write_text(json.dumps(current_candidate_model, indent=2), encoding="utf-8")
         summary_records["final_efsm_path"] = str(final_efsm_file)
+        summary_records["log_path"] = str(sample_log_file)
         summary_records["success"] = True
         return summary_records
 
@@ -581,7 +657,9 @@ def execute_experiment(
 
     while current_round <= max_allowed_rounds:
         round_name = f"round_{current_round}"
-        print(f"\n--- 执行形式化验证 [{round_name}] ---")
+        if current_round > 0:
+            append_experiment_log(sample_log_file, "")
+        append_experiment_log(sample_log_file, f"--- 执行形式化验证 [{round_name}] ---")
 
         candidate_file = output_dir / f"candidate_{round_name}.json"
         candidate_file.write_text(json.dumps(current_candidate_model, indent=2), encoding="utf-8")
@@ -608,29 +686,29 @@ def execute_experiment(
         }
         summary_records["rounds"].append(round_record)
 
-        print(f"[{round_name}] 结果: 通过 {true_count} 条，违例 {false_count} 条")
+        append_experiment_log(sample_log_file, f"[{round_name}] 结果: 通过 {true_count} 条，违例 {false_count} 条")
 
         # 卫语句：没有解析到任何性质结果，说明转译或 nuXmv 执行失败，不能当作反例修复
         if true_count == 0 and false_count == 0:
             error_message = log_output.strip() or "nuXmv 未输出任何性质验证结果"
-            print(f"[!] 验证流程失败，停止迭代: {error_message}")
+            append_experiment_log(sample_log_file, f"[!] 验证流程失败，停止迭代: {error_message}")
             summary_records["error"] = error_message
             break
 
         # 业务意图：全部性质通过，提前成功终止
         if all_passed:
-            print(f"[√] 恭喜！模型在第 {current_round} 轮成功通过全部形式化性质！")
+            append_experiment_log(sample_log_file, f"[√] 模型在第 {current_round} 轮成功通过全部形式化性质！")
             summary_records["success"] = True
             summary_records["converged_at_round"] = current_round
             break
 
         # 卫语句：如果不包含 repair，或者已达最大修复轮次，停止循环
         if "repair" not in pipeline_stages or current_round == max_allowed_rounds:
-            print(f"[!] 达到修复上限或未配置 repair 环节，停止迭代。")
+            append_experiment_log(sample_log_file, "[!] 达到修复上限或未配置 repair 环节，停止迭代。")
             break
 
         # 准备下一轮修复 Prompt
-        print(f"[*] 捕捉到反例，正在组装修复提示词并请求大模型修复...")
+        append_experiment_log(sample_log_file, "[*] 捕捉到反例，正在组装修复提示词并请求大模型修复...")
         repair_messages = build_repair_prompt(
             previous_model=current_candidate_model,
             validation_error_message=None if true_count > 0 else log_output,
@@ -649,7 +727,7 @@ def execute_experiment(
         try:
             current_candidate_model = json.loads(repaired_json_text)
         except json.JSONDecodeError as decode_err:
-            print(f"[!] 修复轮次输出非法 JSON: {decode_err}")
+            append_experiment_log(sample_log_file, f"[!] 修复轮次输出非法 JSON: {decode_err}")
             break
 
         current_round += 1
@@ -662,12 +740,14 @@ def execute_experiment(
     final_efsm_file = output_dir / "final_efsm.json"
     final_efsm_file.write_text(json.dumps(current_candidate_model, indent=2), encoding="utf-8")
     summary_records["final_efsm_path"] = str(final_efsm_file)
+    summary_records["log_path"] = str(sample_log_file)
 
     summary_file = output_dir / "summary.json"
     summary_file.write_text(json.dumps(summary_records, indent=2), encoding="utf-8")
 
     print(f"\n[+] 实验完成！最终 EFSM 模型已导出至: {final_efsm_file}")
     print(f"[+] 实验汇总已保存至: {summary_file}")
+    print(f"[+] 实验日志已保存至: {sample_log_file}")
 
     return summary_records
 
@@ -734,6 +814,13 @@ def main() -> None:
     )
 
     parser.add_argument(
+        "--model-output-name",
+        type=str,
+        default=MODEL_OUTPUTNAME,
+        help="模型在输出目录中的文件夹名称 (默认读取脚本顶部 MODEL_OUTPUTNAME，留空则自动从模型名提取)",
+    )
+
+    parser.add_argument(
         "--nuxmv-path",
         type=str,
         default=None,
@@ -744,7 +831,7 @@ def main() -> None:
         "--output-dir",
         type=Path,
         default=None,
-        help="自定义产物输出根目录 (默认归档在项目根目录 runs/<system>/sampleX)",
+        help="自定义产物输出根目录 (默认归档在项目根目录 runs/<model_output_name>/<system>/sampleX)",
     )
 
     args = parser.parse_args()
@@ -781,11 +868,18 @@ def main() -> None:
         print("    请在 scripts/run_pilot_experiment.py 顶部取消注释至少一个系统 (例如 'vending_machine')。")
         sys.exit(1)
 
+    # 业务意图：确定模型归档目录名 (若留空则自动从模型名称中解析)
+    resolved_model_output_name = resolve_model_output_name(
+        configured_name=args.model_output_name,
+        model_name=args.model,
+    )
+
     repository_root = Path(__file__).resolve().parent.parent
     schema_file = repository_root / "schema" / "efsm.schema.json"
     base_runs_root = args.output_dir if args.output_dir else (repository_root / "runs")
 
     print(f"\n[*] 准备执行 Benchmark 任务，总共配置了 {len(systems_to_run)} 个系统: {systems_to_run}")
+    print(f"[*] 模型输出目录标识: {resolved_model_output_name}")
 
     for system_name in systems_to_run:
         print(f"\n{'=' * 65}")
@@ -813,9 +907,10 @@ def main() -> None:
             print(f"[跳过] 系统 '{system_name}' 缺少接口定义文件: {interface_file}，跳过此系统。")
             continue
 
-        # 业务意图：计算 sample 存放目录，统一归档在 runs/<system_name>/sampleX
+        # 业务意图：计算 sample 存放目录，统一归档在 runs/<model_output_name>/<system_name>/sampleX
         system_output_dir = determine_next_sample_directory(
             base_runs_directory=base_runs_root,
+            model_output_name=resolved_model_output_name,
             system_name=system_name,
             explicit_sample_name=args.sample_id,
         )
