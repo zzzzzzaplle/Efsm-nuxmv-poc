@@ -46,30 +46,32 @@ def validate_semantics(model: dict[str, Any]) -> None:
     states = set(model["states"])
     events = set(model["events"])
 
+    variables = model.get("variables", [])
     variable_names = {
         variable["name"]
-        for variable in model["variables"]
+        for variable in variables
     }
 
     problems: list[str] = []
 
-    if model["initialState"] not in states:
+    initial_state = model.get("initial_state") or model.get("initialState")
+    if not initial_state or initial_state not in states:
         problems.append(
-            f"initialState {model['initialState']!r} "
+            f"initial_state {initial_state!r} "
             "is not declared in states"
         )
 
     transition_ids: set[str] = set()
 
-    for transition in model["transitions"]:
-        transition_id = transition["id"]
+    for idx, transition in enumerate(model["transitions"], start=1):
+        transition_id = transition.get("id") or f"T{idx}"
 
-        if transition_id in transition_ids:
-            problems.append(
-                f"duplicate transition id {transition_id!r}"
-            )
-
-        transition_ids.add(transition_id)
+        if transition.get("id"):
+            if transition_id in transition_ids:
+                problems.append(
+                    f"duplicate transition id {transition_id!r}"
+                )
+            transition_ids.add(transition_id)
 
         if transition["source"] not in states:
             problems.append(
@@ -89,10 +91,11 @@ def validate_semantics(model: dict[str, Any]) -> None:
                 f"{transition['event']!r}"
             )
 
-        for variable_name in transition.get("actions", {}):
+        updates = transition.get("updates") or transition.get("actions") or {}
+        for variable_name in updates:
             if variable_name not in variable_names:
                 problems.append(
-                    f"{transition_id}: action updates unknown "
+                    f"{transition_id}: update target unknown "
                     f"variable {variable_name!r}"
                 )
 
@@ -130,8 +133,18 @@ def smv_initial_value(value: bool | int) -> str:
 
 def generate_smv(model: dict[str, Any]) -> str:
     """将完整EFSM模型转换成SMV文本。"""
+    model_name = (
+        model.get("name")
+        or model.get("system_name")
+        or "EFSM_Model"
+    )
+    initial_state = (
+        model.get("initial_state")
+        or model.get("initialState")
+    )
+
     lines = [
-        f"-- Generated from EFSM: {model['name']}",
+        f"-- Generated from EFSM: {model_name}",
         "MODULE main",
         "",
         "IVAR",
@@ -141,7 +154,8 @@ def generate_smv(model: dict[str, Any]) -> str:
         f"  state : {{{', '.join(model['states'])}}};",
     ]
 
-    for variable in model["variables"]:
+    variables = model.get("variables", [])
+    for variable in variables:
         if variable["type"] == "boolean":
             smv_type = "boolean"
         else:
@@ -156,18 +170,19 @@ def generate_smv(model: dict[str, Any]) -> str:
     lines.extend([
         "",
         "ASSIGN",
-        f"  init(state) := {model['initialState']};",
+        f"  init(state) := {initial_state};",
         "  next(state) :=",
         "    case",
     ])
 
-    for transition in model["transitions"]:
+    for idx, transition in enumerate(model["transitions"], start=1):
         condition = transition_condition(transition)
+        trans_id = transition.get("id") or f"T{idx}"
 
         lines.append(
             f"      {condition} : "
             f"{transition['target']}; "
-            f"-- {transition['id']}"
+            f"-- {trans_id}"
         )
 
     lines.extend([
@@ -175,7 +190,7 @@ def generate_smv(model: dict[str, Any]) -> str:
         "    esac;",
     ])
 
-    for variable in model["variables"]:
+    for variable in variables:
         variable_name = variable["name"]
 
         lines.extend([
@@ -186,18 +201,23 @@ def generate_smv(model: dict[str, Any]) -> str:
             "    case",
         ])
 
-        for transition in model["transitions"]:
-            actions = transition.get("actions", {})
+        for idx, transition in enumerate(model["transitions"], start=1):
+            updates = (
+                transition.get("updates")
+                or transition.get("actions")
+                or {}
+            )
 
-            if variable_name not in actions:
+            if variable_name not in updates:
                 continue
 
             condition = transition_condition(transition)
+            trans_id = transition.get("id") or f"T{idx}"
 
             lines.append(
                 f"      {condition} : "
-                f"{actions[variable_name]}; "
-                f"-- {transition['id']}"
+                f"{updates[variable_name]}; "
+                f"-- {trans_id}"
             )
 
         lines.extend([
@@ -205,21 +225,27 @@ def generate_smv(model: dict[str, Any]) -> str:
             "    esac;",
         ])
 
-    lines.append("")
-
-    for formal_property in model["properties"]:
-        description = formal_property.get(
-            "description",
-            "",
-        )
-
-        lines.append(
-            f"-- {formal_property['id']}: {description}"
-        )
-        lines.append(
-            f"CTLSPEC {formal_property['formula']}"
-        )
+    properties = model.get("properties", [])
+    if properties:
         lines.append("")
+        for formal_property in properties:
+            description = formal_property.get(
+                "description",
+                "",
+            )
+            spec_kind = formal_property.get("kind", "CTL")
+            spec_prefix = (
+                "LTLSPEC" if spec_kind == "LTL" else "CTLSPEC"
+            )
+
+            if description:
+                lines.append(
+                    f"-- {formal_property['id']}: {description}"
+                )
+            lines.append(
+                f"{spec_prefix} {formal_property['formula']}"
+            )
+            lines.append("")
 
     return "\n".join(lines)
 

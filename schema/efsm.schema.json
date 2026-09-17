@@ -1,23 +1,39 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://example.org/efsm.schema.json",
-  "title": "Minimal EFSM Schema",
-  "description": "Minimal JSON representation of an Extended Finite State Machine.",
+  "title": "Extended EFSM Schema (IR v2)",
+  "description": "JSON representation of an Extended Finite State Machine, fused with FSM-Bench-20.",
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "name",
-    "initialState",
     "states",
     "events",
-    "variables",
-    "transitions",
-    "properties"
+    "transitions"
+  ],
+  "anyOf": [
+    {
+      "required": [
+        "initial_state"
+      ]
+    },
+    {
+      "required": [
+        "initialState"
+      ]
+    }
   ],
   "properties": {
     "name": {
-      "type": "string",
-      "pattern": "^[A-Za-z][A-Za-z0-9_]*$"
+      "type": "string"
+    },
+    "system_name": {
+      "type": "string"
+    },
+    "domain": {
+      "type": "string"
+    },
+    "initial_state": {
+      "type": "string"
     },
     "initialState": {
       "type": "string"
@@ -28,7 +44,7 @@
       "uniqueItems": true,
       "items": {
         "type": "string",
-        "pattern": "^[A-Z][A-Z0-9_]*$"
+        "pattern": "^[A-Za-z][A-Za-z0-9_]*$"
       }
     },
     "events": {
@@ -37,14 +53,15 @@
       "uniqueItems": true,
       "items": {
         "type": "string",
-        "pattern": "^[A-Z][A-Z0-9_]*$"
+        "pattern": "^[A-Za-z][A-Za-z0-9_]*$"
       }
     },
     "variables": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/variable"
-      }
+      },
+      "default": []
     },
     "transitions": {
       "type": "array",
@@ -53,9 +70,15 @@
         "$ref": "#/$defs/transition"
       }
     },
+    "forbidden_behaviours": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/forbiddenBehaviour"
+      },
+      "default": []
+    },
     "properties": {
       "type": "array",
-      "minItems": 1,
       "items": {
         "$ref": "#/$defs/formalProperty"
       }
@@ -99,15 +122,13 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "id",
         "source",
         "event",
         "target"
       ],
       "properties": {
         "id": {
-          "type": "string",
-          "pattern": "^T[0-9]+$"
+          "type": "string"
         },
         "source": {
           "type": "string"
@@ -119,8 +140,16 @@
           "type": "string",
           "default": "TRUE"
         },
-        "target": {
-          "type": "string"
+        "action": {
+          "type": "string",
+          "default": ""
+        },
+        "updates": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "default": {}
         },
         "actions": {
           "type": "object",
@@ -128,6 +157,40 @@
             "type": "string"
           },
           "default": {}
+        },
+        "outputs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "target": {
+          "type": "string"
+        },
+        "requirement": {
+          "type": "string",
+          "default": ""
+        }
+      }
+    },
+    "forbiddenBehaviour": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "trace": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "reason": {
+          "type": "string",
+          "default": ""
+        },
+        "requirement": {
+          "type": "string",
+          "default": ""
         }
       }
     },
@@ -145,7 +208,10 @@
           "pattern": "^P[0-9]+$"
         },
         "kind": {
-          "const": "CTL"
+          "enum": [
+            "CTL",
+            "LTL"
+          ]
         },
         "formula": {
           "type": "string"

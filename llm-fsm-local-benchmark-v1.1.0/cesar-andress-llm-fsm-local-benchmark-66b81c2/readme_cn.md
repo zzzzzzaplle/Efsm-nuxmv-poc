@@ -59,39 +59,43 @@ M1 门禁	守卫感知确定性（Guard 互斥）	33.6% (47/140)	即使大修时
 1.原始benchmark相当于只提供了需求，然后运行脚本，大模型生成fsm，最后对fsm进行测试/验证
 2.它中间的FSM json schema的结构详情位于llm-fsm-local-benchmark-v1.1.0/cesar-andress-llm-fsm-local-benchmark-66b81c2/docs/experimental_prompts.md
 这个prompt里面规定按照scripts/fsm_benchmark/schema.py定义的结构生成结果
-{
-  "title": "FSMOutput",
-  "type": "object",
-  "required": ["states", "initial_state", "events", "transitions"],
-  "properties": {
-    "states": { "type": "array", "items": { "type": "string" } },
-    "initial_state": { "type": "string" },
-    "events": { "type": "array", "items": { "type": "string" } },
-    "transitions": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "required": ["source", "event", "target"],
-        "properties": {
-          "source": { "type": "string" },
-          "event": { "type": "string" },
-          "guard": { "type": "string", "default": "" },
-          "action": { "type": "string", "default": "" },
-          "target": { "type": "string" },
-          "requirement": { "type": "string", "default": "" }
+    '''
+    {
+    "title": "FSMOutput",
+    "type": "object",
+    "required": ["states", "initial_state", "events", "transitions"],
+    "properties": {
+        "states": { "type": "array", "items": { "type": "string" } },
+        "initial_state": { "type": "string" },
+        "events": { "type": "array", "items": { "type": "string" } },
+        "transitions": {
+        "type": "array",
+        "items": {
+            "type": "object",
+            "required": ["source", "event", "target"],
+            "properties": {
+            "source": { "type": "string" },
+            "event": { "type": "string" },
+            "guard": { "type": "string", "default": "" },
+            "action": { "type": "string", "default": "" },
+            "target": { "type": "string" },
+            "requirement": { "type": "string", "default": "" }
+            }
         }
-      }
-    },
-    "forbidden_behaviours": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "trace": { "type": "array", "items": { "type": "string" } },
-          "reason": { "type": "string", "default": "" },
-          "requirement": { "type": "string", "default": "" }
+        },
+        "forbidden_behaviours": {
+        "type": "array",
+        "items": {
+            "type": "object",
+            "properties": {
+            "trace": { "type": "array", "items": { "type": "string" } },
+            "reason": { "type": "string", "default": "" },
+            "requirement": { "type": "string", "default": "" }
+            }
         }
-      }
+        }
     }
-  }
-}
+    }
+    '''
+3.此 Benchmark 只是一个**“自然语言描述型 FSM”**。比如它的动作是 action: "Store one credit"（一串英文句子），没有变量声明，nuXmv 根本不知道要把哪个变量从 0 变成 1，形式化验证直接瘫痪。
+4.接下来做法:
