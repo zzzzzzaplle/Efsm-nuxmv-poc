@@ -654,6 +654,8 @@ def execute_experiment(
     # =======================================================
     current_round = 0
     max_allowed_rounds = max_repair_rounds if "repair" in pipeline_stages else 0
+    validation_repair_count = 0
+    max_allowed_validation_repairs = 1
 
     while current_round <= max_allowed_rounds:
         round_name = f"round_{current_round}"
@@ -688,31 +690,53 @@ def execute_experiment(
 
         append_experiment_log(sample_log_file, f"[{round_name}] 结果: 通过 {true_count} 条，违例 {false_count} 条")
 
-        # 卫语句：没有解析到任何性质结果，说明转译或 nuXmv 执行失败，不能当作反例修复
-        if true_count == 0 and false_count == 0:
-            error_message = log_output.strip() or "nuXmv 未输出任何性质验证结果"
-            append_experiment_log(sample_log_file, f"[!] 验证流程失败，停止迭代: {error_message}")
-            summary_records["error"] = error_message
-            break
-
-        # 业务意图：全部性质通过，提前成功终止
+        # 业务意图 1：全部性质通过，提前成功终止
         if all_passed:
             append_experiment_log(sample_log_file, f"[√] 模型在第 {current_round} 轮成功通过全部形式化性质！")
             summary_records["success"] = True
             summary_records["converged_at_round"] = current_round
             break
 
-        # 卫语句：如果不包含 repair，或者已达最大修复轮次，停止循环
+        # 卫语句 2：如果不包含 repair 环节，或者已达最大修复轮次，停止迭代
         if "repair" not in pipeline_stages or current_round == max_allowed_rounds:
-            append_experiment_log(sample_log_file, "[!] 达到修复上限或未配置 repair 环节，停止迭代。")
+            if true_count == 0 and false_count == 0:
+                error_message = log_output.strip() or "结构或语义校验失败"
+                append_experiment_log(sample_log_file, f"[!] 达到轮次上限仍未解决格式校验错误，停止迭代: {error_message}")
+                summary_records["error"] = error_message
+            else:
+                append_experiment_log(sample_log_file, "[!] 达到修复上限或未配置 repair 环节，停止迭代。")
             break
 
+        # 卫语句 3：格式校验失败修复最多允许 1 次，若已达上限则立即停止迭代
+        is_validation_failure = (true_count == 0 and false_count == 0)
+        if is_validation_failure and validation_repair_count >= max_allowed_validation_repairs:
+            error_message = log_output.strip() or "结构或语义校验失败"
+            append_experiment_log(
+                sample_log_file,
+                f"[!] 格式校验失败已达最大重试上限({max_allowed_validation_repairs}次)，停止迭代: {error_message}",
+            )
+            summary_records["error"] = error_message
+            break
+
+        # 业务意图 4：根据错误类型组装诊断提示词并递增校验修复计数
+        if is_validation_failure:
+            validation_repair_count += 1
+            append_experiment_log(
+                sample_log_file,
+                f"[*] 结构或语义校验未通过(第{validation_repair_count}次)，正在组装错误信息请求大模型修复格式...",
+            )
+            validation_error_message = log_output
+            counterexample_report = None
+        else:
+            append_experiment_log(sample_log_file, "[*] 捕捉到反例，正在组装修复提示词并请求大模型修复...")
+            validation_error_message = None
+            counterexample_report = failure_trace
+
         # 准备下一轮修复 Prompt
-        append_experiment_log(sample_log_file, "[*] 捕捉到反例，正在组装修复提示词并请求大模型修复...")
         repair_messages = build_repair_prompt(
             previous_model=current_candidate_model,
-            validation_error_message=None if true_count > 0 else log_output,
-            counterexample_report=failure_trace,
+            validation_error_message=validation_error_message,
+            counterexample_report=counterexample_report,
             interface_data=interface_data,
         )
 
