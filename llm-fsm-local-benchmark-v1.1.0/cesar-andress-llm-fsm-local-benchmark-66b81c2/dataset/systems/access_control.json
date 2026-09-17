@@ -1,0 +1,19 @@
+{
+  "system_name": "Building Access Control System",
+  "domain": "access control",
+  "requirements": [
+    "R1: The door controller starts in the Locked state with the door secured.",
+    "R2: When a valid badge is scanned while in Locked under normal access mode, the door unlocks and the controller moves to UnlockedTimed.",
+    "R3: When the unlock timer expires while in UnlockedTimed, the controller relocks the door and returns to Locked.",
+    "R4: When an invalid badge is scanned while in Locked, the controller must remain Locked, deny access, and record a denied-access event.",
+    "R5: When a valid PIN is entered on the keypad while in Locked, the controller unlocks the door and moves to UnlockedTimed.",
+    "R6: When a fire alarm signal is activated in any state, the controller unlocks the door immediately and moves to FireUnlock.",
+    "R7: When the fire alarm signal is cleared while in FireUnlock, the controller relocks the door and returns to Locked.",
+    "R8: When an authorized remote lock command is received while in UnlockedTimed, the controller relocks the door immediately and returns to Locked.",
+    "R9: When two-person access control is enabled and a first valid badge is scanned while in Locked, the controller moves to AwaitingSecondBadge without unlocking.",
+    "R10: When a second valid badge is scanned within ten seconds while in AwaitingSecondBadge, the controller unlocks the door and moves to UnlockedTimed.",
+    "R11: When the ten-second waiting period expires without a second badge while in AwaitingSecondBadge, the controller returns to Locked.",
+    "R12: When a forced-door-open sensor activates while in Locked, the controller moves to Alarm and emits an intrusion alert.",
+    "R13: The controller must not unlock the door under normal access rules unless either a valid single-badge access, a valid PIN entry, or a valid two-badge sequence occurs."
+  ]
+}

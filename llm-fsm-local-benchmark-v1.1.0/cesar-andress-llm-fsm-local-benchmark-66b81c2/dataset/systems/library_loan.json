@@ -1,0 +1,19 @@
+{
+  "system_name": "Public Library Book Loan System",
+  "domain": "library loan",
+  "requirements": [
+    "R1: Each book copy starts in the Available state on the shelf.",
+    "R2: When a member with an active membership scans a book while the copy is Available, the system records the loan and moves the copy to CheckedOut.",
+    "R3: When a user without active membership attempts checkout while the copy is Available, the system must deny the loan and the copy must remain Available.",
+    "R4: When a member returns a book by scanning it while the copy is CheckedOut and the return is not overdue, the system clears the loan and moves the copy to Available.",
+    "R5: When a member returns an overdue book while the copy is CheckedOut, the system records the fine, clears the loan, and moves the copy to Available.",
+    "R6: When a hold request is placed by an active member while the copy is Available, the system moves the copy to OnHold for that member.",
+    "R7: While a copy is OnHold, checkout attempts by other members must be denied and the copy must remain OnHold.",
+    "R8: When the member with an active hold scans the copy while it is OnHold, the system records the loan and moves the copy to CheckedOut.",
+    "R9: When the hold is cancelled while the copy is OnHold, the system removes the hold and moves the copy to Available.",
+    "R10: When a lost-book report is confirmed while the copy is CheckedOut, the system moves the copy to Lost.",
+    "R11: When a lost copy is recovered and verified while in Lost, the system moves the copy to Available.",
+    "R12: The system must never allow more than one active borrower for the same book copy at the same time.",
+    "R13: The system must not move a copy to CheckedOut unless the borrower has an active membership."
+  ]
+}

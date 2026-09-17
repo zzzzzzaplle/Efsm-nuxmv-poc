@@ -1,0 +1,87 @@
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+.eggs/
+dist/
+build/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Experiment outputs (regeneratable)
+outputs/raw/
+outputs/cleaned/
+results/
+figures/
+
+# Track compact frozen campaign artefacts required by the IST revision deposit.
+# Large per-pair CSV and raw/cleaned outputs remain with the frozen local campaign
+# (size-excluded from the public Git tree).
+!results/summary_by_model.json
+!results/guard_aware_summary.json
+!results/guard_aware_groups.json
+!results/numeric_registry.json
+!results/manifest_20260602T195520Z.json
+!results/manifest_latest.json
+
+# Benchmark figures are intermediate/diagnostic only (smoke tests, exploratory plots).
+# Publication-ready exports belong in the companion paper repository.
+
+# Keep directory structure
+!outputs/raw/.gitkeep
+!outputs/cleaned/.gitkeep
+!figures/.gitkeep
+
+# AI-only and local assistant artifacts
+prompts/
+prompt_drafts/
+ai_prompts/
+cursor_rules/
+.cursor/
+chat_logs/
+assistant_logs/
+scratch_prompts/
+local_notes/
+temporary_prompt_tests/
+AGENTS.md
+*.prompt.txt
+*.chat.txt
+*.assistant.txt
+
+# Environment and secrets
+.env
+.env.*
+*.secret
+*.key
+
+# OS / editors
+.DS_Store
+Thumbs.db
+*~
+*.swp
+*.swo
+.idea/
+.vscode/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# LaTeX build artifacts (if copied into repo)
+*.aux
+*.log
+*.out
+*.toc
+*.bbl
+*.blg
+*.synctex.gz
+*.fdb_latexmk
+*.fls
+
+# Large local artefacts
+*.gguf
+*.bin
+*.safetensors

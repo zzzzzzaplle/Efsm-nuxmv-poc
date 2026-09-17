@@ -1,0 +1,17 @@
+#!/bin/sh
+# Reject commits when Spanish text remains in tracked files.
+set -eu
+
+ROOT="$(git rev-parse --show-toplevel)"
+cd "$ROOT"
+
+if command -v python3.12 >/dev/null 2>&1; then
+  PYTHON=python3.12
+elif command -v python3 >/dev/null 2>&1; then
+  PYTHON=python3
+else
+  echo "pre-commit: python3.12 or python3 is required for language validation" >&2
+  exit 1
+fi
+
+exec "$PYTHON" scripts/validate_language.py --scope tracked

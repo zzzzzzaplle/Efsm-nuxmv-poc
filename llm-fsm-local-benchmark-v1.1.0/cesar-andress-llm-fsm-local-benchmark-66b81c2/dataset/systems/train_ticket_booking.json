@@ -1,0 +1,19 @@
+{
+  "system_name": "Intercity Train Ticket Booking System",
+  "domain": "train ticket booking",
+  "requirements": [
+    "R1: A ticket purchase session starts in the Idle state.",
+    "R2: When the user searches for trains on a selected route while in Idle, the system displays results and moves to SelectTrain.",
+    "R3: When the user selects a train with available seats while in SelectTrain, the system temporarily holds the seat and moves to PassengerDetails.",
+    "R4: When the user submits valid passenger information while in PassengerDetails, the system moves to PaymentDue.",
+    "R5: When payment authorization succeeds while in PaymentDue, the system issues the ticket and moves to TicketIssued.",
+    "R6: When payment authorization fails while in PaymentDue, the system must remain in PaymentDue and allow retry.",
+    "R7: When the user cancels before payment while in SelectTrain, PassengerDetails, or PaymentDue, the system releases held seats and returns to Idle.",
+    "R8: When the seat-hold timer expires while in PassengerDetails or PaymentDue, the system releases the held seat and returns to SelectTrain.",
+    "R9: The system must not issue a ticket unless payment authorization succeeded in PaymentDue.",
+    "R10: The system must not assign a seat that is already occupied or held by another active session.",
+    "R11: When a refund request is approved before train departure while TicketIssued, the system voids the ticket and returns to Idle.",
+    "R12: When the train departure time passes while TicketIssued, the system moves the ticket to Used and disables refund.",
+    "R13: When a group booking of four or more seats is submitted while in PaymentDue, the system moves to GroupPendingApproval until a supervisor approves or rejects the group fare."
+  ]
+}

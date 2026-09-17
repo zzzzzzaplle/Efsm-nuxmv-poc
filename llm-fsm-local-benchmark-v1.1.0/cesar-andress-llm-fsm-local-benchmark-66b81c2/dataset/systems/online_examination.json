@@ -1,0 +1,19 @@
+{
+  "system_name": "Online Examination Proctoring System",
+  "domain": "online examination",
+  "requirements": [
+    "R1: An exam attempt starts in the NotStarted state before the exam window opens.",
+    "R2: When the student authenticates within the scheduled exam window while in NotStarted, the system moves to Ready.",
+    "R3: When the student starts the exam while in Ready, the system locks the attempt and moves to InProgress.",
+    "R4: When the student submits answers voluntarily while in InProgress, the system records the submission and moves to Submitted.",
+    "R5: When the exam timer expires while in InProgress, the system auto-submits the current answers and moves to Submitted.",
+    "R6: When the student attempts to start before the published exam window while in NotStarted, the system must deny start and remain in NotStarted.",
+    "R7: When the student attempts to start after the allowed late-start grace period while in NotStarted, the system marks the attempt as Missed and remains terminal in Missed.",
+    "R8: When a proctor-approved accommodation is applied before start while in Ready, the system stores the extended time allowance and remains in Ready.",
+    "R9: When a prohibited browser tab switch is detected while in InProgress and the violation count is below the maximum, the system records a warning and remains in InProgress.",
+    "R10: When the maximum allowed tab-switch violations is reached while in InProgress, the system terminates the attempt and moves to Terminated.",
+    "R11: When the attempt is Terminated, the system auto-submits collected answers with a violation flag and moves to Submitted.",
+    "R12: The system must not accept manual submission unless the attempt is in the InProgress state.",
+    "R13: Once the attempt reaches Submitted or Missed, the system must not allow restart or return to InProgress."
+  ]
+}

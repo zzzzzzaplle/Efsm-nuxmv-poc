@@ -1,0 +1,18 @@
+{
+  "system_name": "E-Commerce Checkout Flow",
+  "domain": "e-commerce checkout",
+  "requirements": [
+    "R1: A customer checkout session starts in the Cart state.",
+    "R2: When the customer proceeds to checkout with a non-empty cart while in Cart, the system moves to ShippingInfo.",
+    "R3: When the customer submits valid shipping details while in ShippingInfo, the system moves to PaymentPending.",
+    "R4: When the customer submits invalid shipping details while in ShippingInfo, the system must remain in ShippingInfo and display validation errors.",
+    "R5: When payment authorization succeeds while in PaymentPending, the system creates the order and moves to OrderConfirmed.",
+    "R6: When payment authorization fails while in PaymentPending, the system must remain in PaymentPending and allow retry.",
+    "R7: When the customer cancels while in ShippingInfo, the system returns to Cart without creating an order.",
+    "R8: When the customer cancels while in PaymentPending, the system returns to Cart without creating an order.",
+    "R9: When the customer cancels while in OrderConfirmed within the one-hour grace period, the system voids the order and returns to Cart with items restored.",
+    "R10: When a cancellation request occurs while in OrderConfirmed after the grace period has expired, the system must reject cancellation and remain in OrderConfirmed.",
+    "R11: The system must not create an order unless payment authorization succeeded in PaymentPending.",
+    "R12: The system must not allow transition from Cart to ShippingInfo when the cart contains zero items."
+  ]
+}

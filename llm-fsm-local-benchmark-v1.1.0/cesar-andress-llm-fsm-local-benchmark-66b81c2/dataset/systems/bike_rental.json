@@ -1,0 +1,18 @@
+{
+  "system_name": "City Bike Rental Dock",
+  "domain": "bike rental",
+  "requirements": [
+    "R1: Each bicycle starts in the DockedAvailable state locked at a docking station.",
+    "R2: When a subscriber with an active plan scans a bicycle while it is DockedAvailable, the system unlocks the bicycle and moves to UnlockedForPickup.",
+    "R3: When the bicycle is removed from the dock within thirty seconds while in UnlockedForPickup, the system records the rental start and moves to InUse.",
+    "R4: When thirty seconds elapse without removal while in UnlockedForPickup, the system relocks the bicycle and returns to DockedAvailable.",
+    "R5: When the bicycle is returned and locked at any valid dock while InUse, the system ends the rental and moves the bicycle to DockedAvailable.",
+    "R6: When a non-subscriber completes successful payment for a single ride while the bicycle is DockedAvailable, the system unlocks the bicycle and moves to UnlockedForPickup.",
+    "R7: The system must not unlock a bicycle unless either an active subscriber scan or successful single-ride payment has occurred.",
+    "R8: While a bicycle is InUse, unlock requests from other users must be denied and the bicycle must remain InUse.",
+    "R9: When a fault is reported at return while InUse, the system moves the bicycle to MaintenanceRequired after docking.",
+    "R10: When maintenance is completed while in MaintenanceRequired, the system moves the bicycle to DockedAvailable.",
+    "R11: When a bicycle is marked OutOfService by an operator, rental and unlock requests must be denied until maintenance reset occurs.",
+    "R12: When the maximum allowed ride duration is exceeded while InUse, the system remains InUse, records an overtime billing event, and sends an alert to the rider."
+  ]
+}

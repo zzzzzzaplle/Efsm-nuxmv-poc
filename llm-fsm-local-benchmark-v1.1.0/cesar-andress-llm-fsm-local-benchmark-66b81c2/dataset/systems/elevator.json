@@ -1,0 +1,19 @@
+{
+  "system_name": "Single-Car Passenger Elevator",
+  "domain": "elevator",
+  "requirements": [
+    "R1: The elevator starts in the Idle state at floor 1 with doors closed and no pending destination.",
+    "R2: When a hall call or cabin floor request is registered while in Idle, the elevator moves to the Moving state toward the requested floor.",
+    "R3: When the elevator arrives at the requested floor while in Moving, it stops and moves to the DoorsOpening state.",
+    "R4: When doors finish opening while in DoorsOpening, the elevator moves to the DoorsOpen state.",
+    "R5: When the door-close command is issued or the door-open timer expires while in DoorsOpen, the elevator moves to the DoorsClosing state.",
+    "R6: When doors finish closing while in DoorsClosing and no further pending requests exist, the elevator returns to Idle at the current floor.",
+    "R7: When doors finish closing while in DoorsClosing and a pending request exists, the elevator moves to Moving toward the next requested floor.",
+    "R8: When the overload sensor activates while in DoorsOpen, the elevator moves to the Overload state and prevents door closing until load is reduced.",
+    "R9: When the overload condition is cleared while in Overload, the elevator returns to DoorsOpen.",
+    "R10: When the emergency-stop button is pressed in any operational state, the elevator moves to EmergencyStopped and halts motion immediately.",
+    "R11: When the operator releases the emergency stop while in EmergencyStopped, the elevator returns to Idle at the current floor with doors closed.",
+    "R12: The elevator must not move while doors are in the DoorsOpen or DoorsOpening state.",
+    "R13: The elevator must not open doors while in the Moving state."
+  ]
+}

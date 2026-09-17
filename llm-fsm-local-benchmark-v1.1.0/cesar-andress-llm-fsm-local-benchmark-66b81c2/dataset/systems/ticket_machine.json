@@ -1,0 +1,18 @@
+{
+  "system_name": "Public Transport Ticket Machine",
+  "domain": "ticket machine",
+  "requirements": [
+    "R1: The ticket machine starts in the Idle state with no active transaction.",
+    "R2: When the user selects a destination while in Idle, the system displays the fare and moves to SelectingTicket.",
+    "R3: When the user confirms the selected destination while in SelectingTicket, the system moves to AwaitingPayment.",
+    "R4: When the inserted payment equals the required fare while in AwaitingPayment, the system accepts the payment and moves to PrintingTicket.",
+    "R5: When ticket printing completes while in PrintingTicket, the system returns to Idle.",
+    "R6: When the user presses cancel before payment is completed while in SelectingTicket or AwaitingPayment, the system voids the transaction and returns to Idle.",
+    "R7: When the inserted payment is less than the required fare while in AwaitingPayment, the system must not print a ticket and must remain in AwaitingPayment.",
+    "R8: When payment exceeds the required fare while in AwaitingPayment, the system prints the ticket and returns change before returning to Idle.",
+    "R9: When the ticket stock is empty while in AwaitingPayment after valid payment, the system moves to OutOfService and refunds the payment.",
+    "R10: When maintenance restock and reset is performed while in OutOfService, the system returns to Idle.",
+    "R11: The system must not print a ticket unless the required fare has been fully paid in AwaitingPayment.",
+    "R12: The system must allow selection of exactly one destination per transaction."
+  ]
+}

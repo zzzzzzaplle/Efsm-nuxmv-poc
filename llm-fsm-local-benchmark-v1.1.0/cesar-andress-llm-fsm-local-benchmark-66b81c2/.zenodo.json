@@ -1,0 +1,31 @@
+{
+  "title": "FSM-Bench-20: Local LLM Benchmark for Deterministic FSM Generation",
+  "description": "Reproducible benchmark of 20 natural-language requirement specifications for evaluating open-weight LLMs on guarded finite-state machine generation under local Ollama inference. GitHub tag v1.1.0 is the public replication package for the IST revision (dataset, prompt specification, schema, evaluator, guard-aware M0–M3, criterion freeze, unit tests, campaign manifests, aggregate metrics summaries, and per-group diagnostics for manifest 20260602T195520Z). Zenodo DOI 10.5281/zenodo.20517969 archives GitHub release v1.0.0 and does not contain the guard-aware revision files. Full per-pair CSV records and raw/cleaned model outputs are size-excluded from the public archive.",
+  "upload_type": "software",
+  "access_right": "open",
+  "license": "mit",
+  "creators": [
+    {
+      "name": "Andrés, César",
+      "orcid": "0009-0001-8968-3404"
+    }
+  ],
+  "keywords": [
+    "finite state machines",
+    "guard-aware determinism",
+    "model-based testing",
+    "large language models",
+    "requirements engineering",
+    "software engineering benchmark",
+    "Ollama",
+    "reproducible benchmark"
+  ],
+  "related_identifiers": [
+    {
+      "identifier": "https://github.com/cesar-andress/llm-fsm-local-benchmark",
+      "relation": "isSupplementTo",
+      "resource_type": "software",
+      "scheme": "url"
+    }
+  ]
+}

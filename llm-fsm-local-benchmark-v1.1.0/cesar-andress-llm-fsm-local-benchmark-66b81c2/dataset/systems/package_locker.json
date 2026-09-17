@@ -1,0 +1,18 @@
+{
+  "system_name": "Automated Package Locker",
+  "domain": "package locker",
+  "requirements": [
+    "R1: Each locker compartment starts in the Empty state with the door closed.",
+    "R2: When an authenticated courier deposits a package with a valid deposit code while the compartment is Empty, the system locks the package inside and moves to OccupiedAwaitingPickup.",
+    "R3: When the recipient enters the correct pickup code while in OccupiedAwaitingPickup, the system unlocks the compartment door and moves to DoorOpen.",
+    "R4: When the compartment door is closed after recipient removal while in DoorOpen, the system returns to Empty.",
+    "R5: When an incorrect pickup code is entered while in OccupiedAwaitingPickup and fewer than five consecutive failures have occurred, the system denies access and remains in OccupiedAwaitingPickup.",
+    "R6: When five consecutive incorrect pickup codes are entered while in OccupiedAwaitingPickup, the system moves to LockedOut temporarily and denies further code entry.",
+    "R7: When the lockout timer expires while in LockedOut, the system returns to OccupiedAwaitingPickup.",
+    "R8: When the maximum collection period expires without pickup while in OccupiedAwaitingPickup, the system moves to ExpiredAwaitingReturn.",
+    "R9: When an authenticated courier retrieves an expired parcel while in ExpiredAwaitingReturn, the system returns to Empty.",
+    "R10: When an oversized package is detected during deposit while Empty, the system rejects the deposit and remains in Empty.",
+    "R11: The system must not open the compartment for pickup unless the correct pickup code is entered in OccupiedAwaitingPickup.",
+    "R12: The system must not accept courier deposit unless the courier is authenticated and the compartment is Empty."
+  ]
+}

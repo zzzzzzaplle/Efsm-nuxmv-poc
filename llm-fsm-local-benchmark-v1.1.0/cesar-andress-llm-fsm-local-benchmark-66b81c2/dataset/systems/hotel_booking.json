@@ -1,0 +1,19 @@
+{
+  "system_name": "Hotel Room Booking System",
+  "domain": "hotel booking",
+  "requirements": [
+    "R1: A booking session starts in the NoReservation state.",
+    "R2: When the guest searches for rooms with available inventory while in NoReservation, the system moves to the Browsing state.",
+    "R3: When the guest selects an available room and valid dates while in Browsing, the system creates a provisional reservation and moves to PendingPayment.",
+    "R4: When payment is successfully authorized while in PendingPayment, the system moves the reservation to Confirmed.",
+    "R5: When payment fails while in PendingPayment, the system cancels the provisional reservation and returns to Browsing.",
+    "R6: When the guest cancels while in PendingPayment, the system releases the provisional reservation and returns to Browsing.",
+    "R7: When the guest cancels a Confirmed reservation before the check-in deadline, the system moves the reservation to Cancelled.",
+    "R8: When the guest completes check-in on the arrival date while the reservation is Confirmed, the system moves to CheckedIn.",
+    "R9: When the guest completes check-out while CheckedIn, the system moves the reservation to Completed.",
+    "R10: When the guest does not arrive before the no-show deadline while Confirmed, the system moves the reservation to Cancelled and records a no-show fee.",
+    "R11: The system must not allow check-in unless the reservation is in the Confirmed state.",
+    "R12: The system must not move a reservation to Confirmed unless payment authorization succeeded in PendingPayment.",
+    "R13: When a modification request for dates is submitted while Confirmed and alternative inventory is available, the system moves to PendingModification until the guest confirms or rejects the change."
+  ]
+}

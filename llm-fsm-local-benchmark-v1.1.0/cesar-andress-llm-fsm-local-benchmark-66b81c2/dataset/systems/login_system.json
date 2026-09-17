@@ -1,0 +1,19 @@
+{
+  "system_name": "Web Application Login System",
+  "domain": "login system",
+  "requirements": [
+    "R1: The system starts in the LoggedOut state.",
+    "R2: When valid username and password credentials are submitted while in LoggedOut, the system creates a session and moves to the LoggedIn state.",
+    "R3: When invalid credentials are submitted while in LoggedOut and fewer than five consecutive failed attempts have occurred, the system remains in LoggedOut and increments the failed-login counter.",
+    "R4: When a fifth consecutive invalid login attempt occurs while in LoggedOut, the system moves to the Locked state.",
+    "R5: While in Locked, login attempts must be rejected and the system must remain in Locked until the lockout timer expires.",
+    "R6: When the lockout timer expires while in Locked, the system clears the failed-login counter and returns to LoggedOut.",
+    "R7: When the user selects logout while in LoggedIn, the system terminates the session and returns to LoggedOut.",
+    "R8: When the user requests password reset while in LoggedOut, the system sends a reset token and moves to the AwaitingReset state.",
+    "R9: When a valid reset token and new password are submitted while in AwaitingReset, the system updates the password and returns to LoggedOut.",
+    "R10: When an invalid or expired reset token is submitted while in AwaitingReset, the system remains in AwaitingReset and rejects the reset.",
+    "R11: When the user cancels password reset while in AwaitingReset, the system returns to LoggedOut without changing the password.",
+    "R12: The system must not grant access to protected resources unless the user is in the LoggedIn state.",
+    "R13: While in LoggedIn, failed login rules must not apply and the failed-login counter must remain zero."
+  ]
+}

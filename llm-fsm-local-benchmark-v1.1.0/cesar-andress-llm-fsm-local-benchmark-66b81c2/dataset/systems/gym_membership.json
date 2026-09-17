@@ -1,0 +1,19 @@
+{
+  "system_name": "Gym Membership Access System",
+  "domain": "gym membership",
+  "requirements": [
+    "R1: A membership account starts in the Inactive state with no facility access granted.",
+    "R2: When initial membership payment succeeds while Inactive, the system activates the membership and moves to Active.",
+    "R3: When membership payment fails during signup while Inactive, the system must remain Inactive and deny facility access.",
+    "R4: When a member with an Active account scans entry while outside the facility, the system grants access and moves to Inside.",
+    "R5: When the member scans exit while Inside, the system records departure and returns to Active.",
+    "R6: When a member whose account is Inactive scans entry, the system must deny access and remain Inactive.",
+    "R7: When an approved freeze request is applied while Active, the system moves to Frozen and denies entry until unfreeze.",
+    "R8: When a freeze ends or manual unfreeze is processed while Frozen, the system returns to Active.",
+    "R9: When the member submits a cancellation request while Active, the system moves to CancelledPendingExpiry and allows access until the paid period ends.",
+    "R10: When the paid membership period expires while in CancelledPendingExpiry or when renewal payment fails on the renewal date while Active, the system moves to Inactive.",
+    "R11: When a visitor presents a valid one-day guest pass at entry, the system grants access and moves the visitor session to Inside without changing the membership account state.",
+    "R12: The system must not grant facility entry unless the account is Active, the visitor holds a valid guest pass, or an authorized staff override is recorded.",
+    "R13: When payment becomes overdue while Active, the system moves to Suspended and denies entry until payment is settled."
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "system_name": "Parking Lot Exit Gate",
+  "domain": "parking gate",
+  "requirements": [
+    "R1: The gate starts in the BarrierClosed state with the barrier fully lowered.",
+    "R2: When a valid paid parking ticket is inserted while in BarrierClosed, the gate validates the ticket and moves to the BarrierOpening state.",
+    "R3: When the barrier reaches the fully raised position while in BarrierOpening, the gate moves to the BarrierOpen state.",
+    "R4: When a vehicle passage is detected while in BarrierOpen, the gate moves to the BarrierClosing state.",
+    "R5: When the barrier reaches the fully lowered position while in BarrierClosing, the gate returns to BarrierClosed.",
+    "R6: When an invalid or expired ticket is inserted while in BarrierClosed, the gate must not open the barrier and must remain in BarrierClosed.",
+    "R7: When an authorized manual override command is received while in BarrierClosed, the gate moves to BarrierOpen.",
+    "R8: When the override release command is received while in BarrierOpen due to manual override, the gate moves to BarrierClosing.",
+    "R9: When a safety sensor fault is detected in any state, the gate moves to the Fault state with the barrier held closed.",
+    "R10: When the sensor fault is cleared while in Fault, the gate returns to BarrierClosed.",
+    "R11: The gate must not enter BarrierOpen unless either a valid ticket was accepted or a manual override was authorized.",
+    "R12: While in BarrierOpen due to a valid ticket, the gate must eventually return to BarrierClosed after vehicle passage is detected."
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "system_name": "Airport Car Rental System",
+  "domain": "car rental",
+  "requirements": [
+    "R1: Each rental vehicle starts in the Available state at the rental location.",
+    "R2: When a customer creates a confirmed reservation for an Available vehicle, the system moves the vehicle to Reserved.",
+    "R3: When a walk-in customer is approved by an agent for an Available vehicle without prior reservation, the system moves the vehicle directly to Rented after license verification.",
+    "R4: When the assigned customer completes pickup with a valid driver license while the vehicle is Reserved, the system moves the vehicle to Rented.",
+    "R5: When the customer returns the vehicle on time while Rented, the system completes inspection and moves the vehicle to Available.",
+    "R6: When the customer returns the vehicle after the due time while Rented, the system records late fees, completes inspection, and moves the vehicle to Available.",
+    "R7: When damage is recorded during return inspection while Rented, the system moves the vehicle to Maintenance.",
+    "R8: When maintenance work is completed while in Maintenance, the system moves the vehicle to Available.",
+    "R9: When a reservation is cancelled before pickup while the vehicle is Reserved, the system releases the reservation and returns the vehicle to Available.",
+    "R10: The system must not move a vehicle to Rented unless a valid driver license was verified at pickup.",
+    "R11: The system must not assign the same vehicle to two active reservations simultaneously.",
+    "R12: When returned fuel level is below the minimum required level while Rented, the system records a refueling charge before moving the vehicle to Available or Maintenance."
+  ]
+}

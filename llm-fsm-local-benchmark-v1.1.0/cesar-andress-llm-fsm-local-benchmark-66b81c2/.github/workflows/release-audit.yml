@@ -1,0 +1,47 @@
+name: Release Language Audit
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release version label (e.g. v0.2.0)"
+        required: true
+        type: string
+
+jobs:
+  release-audit:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: .
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Resolve release version
+        id: version
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "value=${{ inputs.version }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "value=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Repository-wide language audit
+        run: |
+          python scripts/validate_language.py \
+            --scope workspace \
+            --write-report "docs/release_language_audit_${{ steps.version.outputs.value }}.md" \
+            --release-version "${{ steps.version.outputs.value }}"
+
+      - name: Validate dataset and benchmark integrity
+        run: python scripts/validate_integrity.py

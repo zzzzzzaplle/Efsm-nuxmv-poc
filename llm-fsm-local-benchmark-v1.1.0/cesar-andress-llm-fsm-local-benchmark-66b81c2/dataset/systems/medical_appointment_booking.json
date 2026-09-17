@@ -1,0 +1,19 @@
+{
+  "system_name": "Medical Appointment Booking Portal",
+  "domain": "medical appointment booking",
+  "requirements": [
+    "R1: A patient booking session starts in the Idle state.",
+    "R2: When an authenticated patient opens the booking portal while in Idle, the system moves to BrowsingSlots.",
+    "R3: When the patient selects an available appointment slot while in BrowsingSlots, the system holds the slot temporarily and moves to PendingConfirmation.",
+    "R4: When the patient confirms the held slot while in PendingConfirmation, the system creates the appointment and moves to Booked.",
+    "R5: When the patient cancels the booking while in PendingConfirmation, the system releases the held slot and returns to BrowsingSlots.",
+    "R6: When the patient cancels a Booked appointment at least twenty-four hours before the scheduled time, the system cancels the appointment and returns to Idle.",
+    "R7: When the patient cancels a Booked appointment less than twenty-four hours before the scheduled time, the system cancels the appointment, records a late-cancellation penalty, and returns to Idle.",
+    "R8: When the patient requests rescheduling while in Booked, the system releases the current slot and returns to BrowsingSlots.",
+    "R9: When no appointment slots are available while in BrowsingSlots, the system offers waitlist enrollment and moves to Waitlisted on acceptance.",
+    "R10: When a waitlisted slot becomes available while in Waitlisted, the system notifies the patient and moves to BrowsingSlots with the slot preselected.",
+    "R11: The system must not create an appointment unless the patient is authenticated before entering BrowsingSlots.",
+    "R12: The system must not assign the same appointment slot to more than one patient.",
+    "R13: When the patient completes clinic check-in on the appointment day while in Booked, the system moves to CheckedIn."
+  ]
+}

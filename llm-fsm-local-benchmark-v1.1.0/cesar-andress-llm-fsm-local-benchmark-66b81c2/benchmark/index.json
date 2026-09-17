@@ -1,0 +1,152 @@
+{
+  "dataset_name": "FSM-Bench-20",
+  "version": "0.1.0",
+  "description": "Benchmark dataset for evaluating LLM generation of deterministic finite state machines from natural language requirements.",
+  "system_count": 20,
+  "requirements_per_system": {
+    "min": 12,
+    "max": 13
+  },
+  "systems": [
+    {
+      "id": 1,
+      "file": "systems/vending_machine.json",
+      "system_name": "Drink Vending Machine",
+      "domain": "vending machine",
+      "requirement_count": 13
+    },
+    {
+      "id": 2,
+      "file": "systems/atm.json",
+      "system_name": "Automated Teller Machine",
+      "domain": "ATM",
+      "requirement_count": 13
+    },
+    {
+      "id": 3,
+      "file": "systems/login_system.json",
+      "system_name": "Web Application Login System",
+      "domain": "login system",
+      "requirement_count": 13
+    },
+    {
+      "id": 4,
+      "file": "systems/parking_gate.json",
+      "system_name": "Parking Lot Exit Gate",
+      "domain": "parking gate",
+      "requirement_count": 12
+    },
+    {
+      "id": 5,
+      "file": "systems/elevator.json",
+      "system_name": "Single-Car Passenger Elevator",
+      "domain": "elevator",
+      "requirement_count": 13
+    },
+    {
+      "id": 6,
+      "file": "systems/library_loan.json",
+      "system_name": "Public Library Book Loan System",
+      "domain": "library loan",
+      "requirement_count": 13
+    },
+    {
+      "id": 7,
+      "file": "systems/hotel_booking.json",
+      "system_name": "Hotel Room Booking System",
+      "domain": "hotel booking",
+      "requirement_count": 13
+    },
+    {
+      "id": 8,
+      "file": "systems/ticket_machine.json",
+      "system_name": "Public Transport Ticket Machine",
+      "domain": "ticket machine",
+      "requirement_count": 12
+    },
+    {
+      "id": 9,
+      "file": "systems/ecommerce_checkout.json",
+      "system_name": "E-Commerce Checkout Flow",
+      "domain": "e-commerce checkout",
+      "requirement_count": 12
+    },
+    {
+      "id": 10,
+      "file": "systems/smart_thermostat.json",
+      "system_name": "Smart Home Thermostat Controller",
+      "domain": "smart thermostat",
+      "requirement_count": 12
+    },
+    {
+      "id": 11,
+      "file": "systems/access_control.json",
+      "system_name": "Building Access Control System",
+      "domain": "access control",
+      "requirement_count": 13
+    },
+    {
+      "id": 12,
+      "file": "systems/medical_appointment_booking.json",
+      "system_name": "Medical Appointment Booking Portal",
+      "domain": "medical appointment booking",
+      "requirement_count": 13
+    },
+    {
+      "id": 13,
+      "file": "systems/bike_rental.json",
+      "system_name": "City Bike Rental Dock",
+      "domain": "bike rental",
+      "requirement_count": 12
+    },
+    {
+      "id": 14,
+      "file": "systems/warehouse_inventory.json",
+      "system_name": "Warehouse Inventory Unit Tracker",
+      "domain": "warehouse inventory",
+      "requirement_count": 13
+    },
+    {
+      "id": 15,
+      "file": "systems/online_examination.json",
+      "system_name": "Online Examination Proctoring System",
+      "domain": "online examination",
+      "requirement_count": 13
+    },
+    {
+      "id": 16,
+      "file": "systems/car_rental.json",
+      "system_name": "Airport Car Rental System",
+      "domain": "car rental",
+      "requirement_count": 12
+    },
+    {
+      "id": 17,
+      "file": "systems/package_locker.json",
+      "system_name": "Automated Package Locker",
+      "domain": "package locker",
+      "requirement_count": 12
+    },
+    {
+      "id": 18,
+      "file": "systems/restaurant_reservation.json",
+      "system_name": "Restaurant Table Reservation System",
+      "domain": "restaurant reservation",
+      "requirement_count": 12
+    },
+    {
+      "id": 19,
+      "file": "systems/train_ticket_booking.json",
+      "system_name": "Intercity Train Ticket Booking System",
+      "domain": "train ticket booking",
+      "requirement_count": 13
+    },
+    {
+      "id": 20,
+      "file": "systems/gym_membership.json",
+      "system_name": "Gym Membership Access System",
+      "domain": "gym membership",
+      "requirement_count": 13
+    }
+  ]
+}

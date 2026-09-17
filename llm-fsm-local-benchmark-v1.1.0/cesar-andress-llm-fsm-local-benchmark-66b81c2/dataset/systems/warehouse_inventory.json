@@ -1,0 +1,19 @@
+{
+  "system_name": "Warehouse Inventory Unit Tracker",
+  "domain": "warehouse inventory",
+  "requirements": [
+    "R1: Each inventory unit starts in the InStock state in the warehouse.",
+    "R2: When an order allocation is confirmed for an available unit while InStock, the system reserves the unit and moves it to Reserved.",
+    "R3: When the unit is picked and scanned at the packing station while Reserved, the system moves the unit to Shipped.",
+    "R4: When a replenishment receipt is confirmed for a Shipped consumable unit, a replacement unit is created in InStock.",
+    "R5: When an order is cancelled before picking while the unit is Reserved, the system releases the reservation and returns the unit to InStock.",
+    "R6: When damage is detected during inspection while InStock or Reserved, the system moves the unit to Quarantine.",
+    "R7: When inspection passes while in Quarantine, the system returns the unit to InStock.",
+    "R8: When inspection fails while in Quarantine, the system moves the unit to Disposed.",
+    "R9: When available quantity falls below the reorder threshold while InStock, the system creates a replenishment request and remains InStock with a ReorderPending flag.",
+    "R10: When the replenishment order arrives while ReorderPending is set, the system clears ReorderPending and additional units enter InStock.",
+    "R11: The system must not reserve more units than are currently InStock.",
+    "R12: The system must not move a unit to Shipped unless it was previously in the Reserved state.",
+    "R13: When a cycle-count discrepancy is confirmed for a unit while InStock, the system moves the unit to AuditHold until reconciliation is completed."
+  ]
+}

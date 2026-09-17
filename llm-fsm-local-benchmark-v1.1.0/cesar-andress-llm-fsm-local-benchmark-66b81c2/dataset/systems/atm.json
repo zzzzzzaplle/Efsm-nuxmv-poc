@@ -1,0 +1,19 @@
+{
+  "system_name": "Automated Teller Machine",
+  "domain": "ATM",
+  "requirements": [
+    "R1: The ATM starts in the Idle state with no card inserted and no authenticated session.",
+    "R2: When a valid card is inserted while in Idle, the ATM reads the card and moves to the CardInserted state.",
+    "R3: When the correct PIN is entered while in CardInserted, the ATM moves to the Authenticated state.",
+    "R4: When an incorrect PIN is entered while in CardInserted and fewer than three consecutive incorrect attempts have occurred, the ATM remains in CardInserted and increments the failed-PIN counter.",
+    "R5: When a third consecutive incorrect PIN is entered while in CardInserted, the ATM retains the card and returns to Idle.",
+    "R6: When the user selects withdrawal while in Authenticated and the account balance is sufficient, the ATM moves to DispensingCash and then dispenses the requested amount.",
+    "R7: When cash dispensing completes while in DispensingCash, the ATM ejects the card and returns to Idle.",
+    "R8: When the user selects withdrawal while in Authenticated and the account balance is insufficient, the ATM must not dispense cash and must remain in Authenticated.",
+    "R9: When the user selects balance inquiry while in Authenticated, the ATM displays the balance and remains in Authenticated.",
+    "R10: When the user presses cancel while in CardInserted, the ATM ejects the card without authentication and returns to Idle.",
+    "R11: When the user presses cancel while in Authenticated, the ATM ejects the card and returns to Idle.",
+    "R12: The ATM must not dispense cash unless the session is in the Authenticated state.",
+    "R13: When the authenticated session timer expires while in Authenticated, the ATM ejects the card and returns to Idle."
+  ]
+}

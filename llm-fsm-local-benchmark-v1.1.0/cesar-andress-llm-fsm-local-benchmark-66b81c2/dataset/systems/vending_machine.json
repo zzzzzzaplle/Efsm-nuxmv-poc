@@ -1,0 +1,19 @@
+{
+  "system_name": "Drink Vending Machine",
+  "domain": "vending machine",
+  "requirements": [
+    "R1: The machine starts in the Idle state with no stored credit and no drink being dispensed.",
+    "R2: When the user inserts a valid coin while in Idle, the machine stores exactly one credit and moves to the CreditAvailable state.",
+    "R3: When the user presses the coffee button while in CreditAvailable, the machine dispenses coffee and moves to the Dispensing state.",
+    "R4: When the user presses the tea button while in CreditAvailable, the machine dispenses tea and moves to the Dispensing state.",
+    "R5: When the user presses any drink button while in Idle, the machine must not dispense any drink and must remain in Idle.",
+    "R6: When drink dispensing completes while in Dispensing, the machine clears the transaction credit and returns to Idle.",
+    "R7: When the user presses cancel while in CreditAvailable, the machine returns the stored coin and returns to Idle.",
+    "R8: When the user presses cancel while in Idle, the machine must not return any coin and must remain in Idle.",
+    "R9: While in Dispensing, pressing any drink button must not start a second dispense and the machine must remain in Dispensing.",
+    "R10: The machine must never dispense coffee and tea within the same transaction.",
+    "R11: The machine must never dispense any drink unless a credit was stored after the most recent return to Idle.",
+    "R12: When the user inserts a coin while in CreditAvailable, the machine must reject the additional coin and remain in CreditAvailable with exactly one credit.",
+    "R13: While in Dispensing, the machine must ignore cancel requests and remain in Dispensing until dispensing completes."
+  ]
+}

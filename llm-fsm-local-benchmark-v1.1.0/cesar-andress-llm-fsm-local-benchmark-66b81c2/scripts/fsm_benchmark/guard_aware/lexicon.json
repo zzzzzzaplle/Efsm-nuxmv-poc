@@ -1,0 +1,41 @@
+{
+  "version": "1.0.0",
+  "description": "Frozen negation / polarity lexicon for minimal-pair EXCLUSIVE tests.",
+  "polarity_pairs": [
+    ["valid", "invalid"],
+    ["correct", "incorrect"],
+    ["true", "false"],
+    ["success", "failure"],
+    ["succeeded", "failed"],
+    ["empty", "not_empty"],
+    ["overdue", "not_overdue"],
+    ["active", "inactive"],
+    ["guest", "not_guest"],
+    ["member", "non_member"],
+    ["available", "unavailable"],
+    ["open", "closed"],
+    ["present", "absent"],
+    ["accepted", "rejected"],
+    ["approved", "rejected"],
+    ["enabled", "disabled"],
+    ["locked", "unlocked"],
+    ["full", "not_full"],
+    ["positive", "negative"],
+    ["pass", "fail"],
+    ["passed", "failed"],
+    ["allowed", "denied"],
+    ["authenticated", "unauthenticated"],
+    ["authorized", "unauthorized"]
+  ],
+  "negation_markers": [
+    "not",
+    "no",
+    "non",
+    "un",
+    "in",
+    "im",
+    "!",
+    "never",
+    "without"
+  ]
+}

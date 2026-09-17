@@ -1,0 +1,18 @@
+{
+  "system_name": "Restaurant Table Reservation System",
+  "domain": "restaurant reservation",
+  "requirements": [
+    "R1: A reservation session starts in the NoBooking state.",
+    "R2: When the customer selects a date and time with available table capacity while in NoBooking, the system moves to PendingDetails.",
+    "R3: When the customer submits valid contact information and a party size that fits available capacity while in PendingDetails, the system moves to Confirmed.",
+    "R4: When the customer submits a party size exceeding table capacity while in PendingDetails, the system must reject the reservation and remain in PendingDetails.",
+    "R5: When the customer cancels a Confirmed reservation at least two hours before the scheduled time, the system cancels the booking and returns to NoBooking.",
+    "R6: When the customer arrives and checks in while Confirmed, the system moves to Seated.",
+    "R7: When the customer does not arrive within the no-show grace period while Confirmed, the system moves to NoShowRecorded and releases the table.",
+    "R8: When a walk-in customer requests seating while in NoBooking and no table is immediately available, the system adds the customer to WaitingList.",
+    "R9: When a table becomes available for a WaitingList entry, the system notifies the customer and moves the reservation to Seated upon confirmation.",
+    "R10: When the customer modifies party size before the modification deadline while Confirmed, the system moves to PendingDetails for revalidation.",
+    "R11: The system must not move a customer to Seated unless the reservation is Confirmed or the customer accepted a WaitingList offer.",
+    "R12: The system must not confirm two parties for the same table at the same time slot."
+  ]
+}

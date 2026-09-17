@@ -1,0 +1,18 @@
+{
+  "system_name": "Smart Home Thermostat Controller",
+  "domain": "smart thermostat",
+  "requirements": [
+    "R1: The thermostat starts in the Idle state with scheduled mode active and neither heating nor cooling running.",
+    "R2: When the measured room temperature falls below the active setpoint while in Idle, the system turns on heating and moves to Heating.",
+    "R3: When the measured room temperature reaches the active setpoint while in Heating, the system turns off heating and returns to Idle.",
+    "R4: When the user enables eco mode while in Idle or Heating, the system moves to Eco and applies the eco temperature limits.",
+    "R5: While in Eco, the system must turn on heating only if the temperature falls below the eco lower threshold and must turn off heating when the eco upper threshold is reached.",
+    "R6: When the daily schedule enters an occupied period, the system moves from any non-fault mode to Active and applies occupied setpoints.",
+    "R7: When the daily schedule enters an away period, the system moves to Away and applies away setpoints.",
+    "R8: While in Away, the system must maintain at least the minimum anti-freeze temperature and must not cool unless cooling is explicitly configured for away mode.",
+    "R9: When the user issues a manual temperature override, the system moves to Manual and applies the override setpoint.",
+    "R10: When the manual override timer expires while in Manual, the system returns to the previous non-manual mode.",
+    "R11: When a temperature sensor fault is detected in any state, the system moves to FaultSafe, turns off heating and cooling outputs, and remains in FaultSafe until the fault is cleared.",
+    "R12: The system must never activate heating and cooling outputs at the same time."
+  ]
+}

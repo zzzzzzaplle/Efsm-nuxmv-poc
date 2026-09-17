@@ -1,0 +1,47 @@
+name: Validate Repository
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: .
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Validate JSON syntax, dataset, and benchmark
+        run: python scripts/validate_integrity.py
+
+      - name: Validate English-only tracked files
+        run: python scripts/validate_language.py --scope tracked
+
+      - name: Validate experimental prompt specification exists
+        run: test -f docs/experimental_prompts.md
+
+      - name: Validate dataset requirement numbering (quick check)
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root = Path("dataset/systems")
+          for path in sorted(root.glob("*.json")):
+              data = json.loads(path.read_text())
+              reqs = data["requirements"]
+              for i, req in enumerate(reqs, 1):
+                  assert req.startswith(f"R{i}:"), f"{path.name}: bad numbering at R{i}"
+          print(f"Checked {len(list(root.glob('*.json')))} system files")
+          PY
