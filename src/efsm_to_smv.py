@@ -54,8 +54,8 @@ def validate_semantics(model: dict[str, Any]) -> None:
 
     problems: list[str] = []
 
-    initial_state = model.get("initial_state") or model.get("initialState")
-    if not initial_state or initial_state not in states:
+    initial_state = model["initial_state"]
+    if initial_state not in states:
         problems.append(
             f"initial_state {initial_state!r} "
             "is not declared in states"
@@ -91,7 +91,7 @@ def validate_semantics(model: dict[str, Any]) -> None:
                 f"{transition['event']!r}"
             )
 
-        updates = transition.get("updates") or transition.get("actions") or {}
+        updates = transition.get("updates", {})
         for variable_name in updates:
             if variable_name not in variable_names:
                 problems.append(
@@ -131,17 +131,17 @@ def smv_initial_value(value: bool | int | str) -> str:
     return str(value)
 
 
-def generate_smv(model: dict[str, Any]) -> str:
+def generate_smv(
+    model: dict[str, Any],
+    properties: list[dict[str, Any]] | None = None,
+) -> str:
     """将完整EFSM模型转换成SMV文本。"""
     model_name = (
         model.get("name")
         or model.get("system_name")
         or "EFSM_Model"
     )
-    initial_state = (
-        model.get("initial_state")
-        or model.get("initialState")
-    )
+    initial_state = model["initial_state"]
 
     lines = [
         f"-- Generated from EFSM: {model_name}",
@@ -206,11 +206,7 @@ def generate_smv(model: dict[str, Any]) -> str:
         ])
 
         for idx, transition in enumerate(model["transitions"], start=1):
-            updates = (
-                transition.get("updates")
-                or transition.get("actions")
-                or {}
-            )
+            updates = transition.get("updates", {})
 
             if variable_name not in updates:
                 continue
@@ -229,7 +225,6 @@ def generate_smv(model: dict[str, Any]) -> str:
             "    esac;",
         ])
 
-    properties = model.get("properties", [])
     if properties:
         lines.append("")
         for formal_property in properties:
@@ -281,6 +276,20 @@ def main() -> None:
         help="EFSM JSON Schema file",
     )
 
+    parser.add_argument(
+        "--properties",
+        type=Path,
+        default=None,
+        help="Decoupled formal properties JSON file",
+    )
+
+    parser.add_argument(
+        "--properties-schema",
+        type=Path,
+        default=Path("schema/formal_properties.schema.json"),
+        help="Formal properties JSON Schema file",
+    )
+
     args = parser.parse_args()
 
     model = load_json(args.model)
@@ -289,7 +298,14 @@ def main() -> None:
     validate_structure(model, schema)
     validate_semantics(model)
 
-    smv_text = generate_smv(model)
+    properties_list = None
+    if args.properties:
+        properties_data = load_json(args.properties)
+        properties_schema = load_json(args.properties_schema)
+        validate_structure(properties_data, properties_schema)
+        properties_list = properties_data["properties"]
+
+    smv_text = generate_smv(model, properties=properties_list)
 
     args.output.parent.mkdir(
         parents=True,
@@ -302,6 +318,8 @@ def main() -> None:
     )
 
     print(f"OK: validated {args.model}")
+    if args.properties:
+        print(f"OK: validated properties {args.properties}")
     print(f"OK: generated {args.output}")
 
 

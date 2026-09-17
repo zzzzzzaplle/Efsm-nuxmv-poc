@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.org/formal_properties.schema.json",
+  "title": "Formal Properties Schema",
+  "description": "Formal temporal properties (CTL/LTL) decoupled from candidate EFSM.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "properties"
+  ],
+  "properties": {
+    "properties": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/formalProperty"
+      }
+    }
+  },
+  "$defs": {
+    "formalProperty": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "kind",
+        "formula"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^P[0-9]+$"
+        },
+        "kind": {
+          "enum": [
+            "CTL",
+            "LTL"
+          ]
+        },
+        "formula": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

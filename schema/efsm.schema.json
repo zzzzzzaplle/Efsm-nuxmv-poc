@@ -7,20 +7,9 @@
   "additionalProperties": false,
   "required": [
     "states",
+    "initial_state",
     "events",
     "transitions"
-  ],
-  "anyOf": [
-    {
-      "required": [
-        "initial_state"
-      ]
-    },
-    {
-      "required": [
-        "initialState"
-      ]
-    }
   ],
   "properties": {
     "name": {
@@ -33,9 +22,6 @@
       "type": "string"
     },
     "initial_state": {
-      "type": "string"
-    },
-    "initialState": {
       "type": "string"
     },
     "states": {
@@ -76,12 +62,6 @@
         "$ref": "#/$defs/forbiddenBehaviour"
       },
       "default": []
-    },
-    "properties": {
-      "type": "array",
-      "items": {
-        "$ref": "#/$defs/formalProperty"
-      }
     }
   },
   "$defs": {
@@ -162,13 +142,6 @@
           },
           "default": {}
         },
-        "actions": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          },
-          "default": {}
-        },
         "outputs": {
           "type": "array",
           "items": {
@@ -202,33 +175,6 @@
         "requirement": {
           "type": "string",
           "default": ""
-        }
-      }
-    },
-    "formalProperty": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "kind",
-        "formula"
-      ],
-      "properties": {
-        "id": {
-          "type": "string",
-          "pattern": "^P[0-9]+$"
-        },
-        "kind": {
-          "enum": [
-            "CTL",
-            "LTL"
-          ]
-        },
-        "formula": {
-          "type": "string"
-        },
-        "description": {
-          "type": "string"
         }
       }
     }
