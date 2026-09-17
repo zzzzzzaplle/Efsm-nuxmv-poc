@@ -1,0 +1,256 @@
+{
+  "name": "DrinkVendingMachine",
+  "system_name": "Drink Vending Machine",
+  "domain": "vending machine",
+  "states": [
+    "Idle",
+    "CreditAvailable",
+    "Dispensing"
+  ],
+  "initial_state": "Idle",
+  "events": [
+    "insert_coin",
+    "press_coffee",
+    "press_tea",
+    "cancel",
+    "dispense_complete"
+  ],
+  "variables": [
+    {
+      "name": "creditStored",
+      "type": "boolean",
+      "initial": false
+    },
+    {
+      "name": "selectedDrink",
+      "type": "enum",
+      "values": [
+        "NONE",
+        "COFFEE",
+        "TEA"
+      ],
+      "initial": "NONE"
+    }
+  ],
+  "transitions": [
+    {
+      "id": "T1",
+      "source": "Idle",
+      "event": "insert_coin",
+      "guard": "TRUE",
+      "action": "Store exactly one credit",
+      "updates": {
+        "creditStored": "TRUE"
+      },
+      "outputs": [],
+      "target": "CreditAvailable",
+      "requirement": "R2"
+    },
+    {
+      "id": "T2",
+      "source": "Idle",
+      "event": "press_coffee",
+      "guard": "TRUE",
+      "action": "Ignore coffee selection without credit",
+      "updates": {},
+      "outputs": [],
+      "target": "Idle",
+      "requirement": "R5, R11"
+    },
+    {
+      "id": "T3",
+      "source": "Idle",
+      "event": "press_tea",
+      "guard": "TRUE",
+      "action": "Ignore tea selection without credit",
+      "updates": {},
+      "outputs": [],
+      "target": "Idle",
+      "requirement": "R5, R11"
+    },
+    {
+      "id": "T4",
+      "source": "Idle",
+      "event": "cancel",
+      "guard": "TRUE",
+      "action": "Ignore cancel because no credit is stored",
+      "updates": {},
+      "outputs": [],
+      "target": "Idle",
+      "requirement": "R8"
+    },
+    {
+      "id": "T5",
+      "source": "CreditAvailable",
+      "event": "press_coffee",
+      "guard": "TRUE",
+      "action": "Start dispensing coffee",
+      "updates": {
+        "selectedDrink": "COFFEE"
+      },
+      "outputs": [
+        "DISPENSE_COFFEE"
+      ],
+      "target": "Dispensing",
+      "requirement": "R3"
+    },
+    {
+      "id": "T6",
+      "source": "CreditAvailable",
+      "event": "press_tea",
+      "guard": "TRUE",
+      "action": "Start dispensing tea",
+      "updates": {
+        "selectedDrink": "TEA"
+      },
+      "outputs": [
+        "DISPENSE_TEA"
+      ],
+      "target": "Dispensing",
+      "requirement": "R4"
+    },
+    {
+      "id": "T7",
+      "source": "CreditAvailable",
+      "event": "cancel",
+      "guard": "TRUE",
+      "action": "Return the stored coin and clear the transaction",
+      "updates": {
+        "creditStored": "FALSE",
+        "selectedDrink": "NONE"
+      },
+      "outputs": [
+        "RETURN_COIN"
+      ],
+      "target": "Idle",
+      "requirement": "R7"
+    },
+    {
+      "id": "T8",
+      "source": "CreditAvailable",
+      "event": "insert_coin",
+      "guard": "TRUE",
+      "action": "Reject the additional coin and retain exactly one credit",
+      "updates": {},
+      "outputs": [
+        "REJECT_COIN"
+      ],
+      "target": "CreditAvailable",
+      "requirement": "R12"
+    },
+    {
+      "id": "T9",
+      "source": "Dispensing",
+      "event": "dispense_complete",
+      "guard": "TRUE",
+      "action": "Complete dispensing and clear the transaction",
+      "updates": {
+        "creditStored": "FALSE",
+        "selectedDrink": "NONE"
+      },
+      "outputs": [],
+      "target": "Idle",
+      "requirement": "R6"
+    },
+    {
+      "id": "T10",
+      "source": "Dispensing",
+      "event": "press_coffee",
+      "guard": "TRUE",
+      "action": "Ignore additional coffee selection while dispensing",
+      "updates": {},
+      "outputs": [],
+      "target": "Dispensing",
+      "requirement": "R9, R10"
+    },
+    {
+      "id": "T11",
+      "source": "Dispensing",
+      "event": "press_tea",
+      "guard": "TRUE",
+      "action": "Ignore additional tea selection while dispensing",
+      "updates": {},
+      "outputs": [],
+      "target": "Dispensing",
+      "requirement": "R9, R10"
+    },
+    {
+      "id": "T12",
+      "source": "Dispensing",
+      "event": "cancel",
+      "guard": "TRUE",
+      "action": "Ignore cancel while dispensing",
+      "updates": {},
+      "outputs": [],
+      "target": "Dispensing",
+      "requirement": "R13"
+    }
+  ],
+  "forbidden_behaviours": [
+    {
+      "trace": [
+        "press_coffee"
+      ],
+      "reason": "Starting from Idle, the machine must not emit a dispense output without stored credit.",
+      "requirement": "R5, R11"
+    },
+    {
+      "trace": [
+        "press_tea"
+      ],
+      "reason": "Starting from Idle, the machine must not emit a dispense output without stored credit.",
+      "requirement": "R5, R11"
+    },
+    {
+      "trace": [
+        "cancel"
+      ],
+      "reason": "Starting from Idle, cancel must not emit RETURN_COIN.",
+      "requirement": "R8"
+    },
+    {
+      "trace": [
+        "insert_coin",
+        "press_coffee",
+        "press_tea"
+      ],
+      "reason": "The second drink selection must not emit DISPENSE_TEA or change the selected drink during the same transaction.",
+      "requirement": "R9, R10"
+    },
+    {
+      "trace": [
+        "insert_coin",
+        "press_tea",
+        "press_coffee"
+      ],
+      "reason": "The second drink selection must not emit DISPENSE_COFFEE or change the selected drink during the same transaction.",
+      "requirement": "R9, R10"
+    },
+    {
+      "trace": [
+        "insert_coin",
+        "insert_coin"
+      ],
+      "reason": "The second coin must not create another credit; it must be rejected while exactly one credit remains stored.",
+      "requirement": "R12"
+    },
+    {
+      "trace": [
+        "insert_coin",
+        "press_coffee",
+        "cancel"
+      ],
+      "reason": "Cancel during coffee dispensing must not leave Dispensing or emit RETURN_COIN.",
+      "requirement": "R13"
+    },
+    {
+      "trace": [
+        "insert_coin",
+        "press_tea",
+        "cancel"
+      ],
+      "reason": "Cancel during tea dispensing must not leave Dispensing or emit RETURN_COIN.",
+      "requirement": "R13"
+    }
+  ]
+}
