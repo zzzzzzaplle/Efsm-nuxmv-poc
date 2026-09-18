@@ -87,7 +87,7 @@ ACTIVE_BENCHMARK_SYSTEMS = [
     # "online_examination",          # 在线考试系统
     # "package_locker",              # 快递快递柜
     # "parking_gate",                # 停车场道闸
-    # "restaurant_reservation",     # 餐厅订座系统
+    # "restaurant_reservation",      # 餐厅订座系统
     # "smart_thermostat",            # 智能恒温器
     # "ticket_machine",              # 自动售票机
     # "train_ticket_booking",        # 火车票预订系统
@@ -95,7 +95,7 @@ ACTIVE_BENCHMARK_SYSTEMS = [
 ]
 
 # ==============================================================================
-# nuXmv 求解器路径配置 (同时兼容 macOS 与 WSL/Linux 跨平台协作)
+# nuXmv 求解器路径配置 (兼容 macOS 与 WSL)
 # 自动探测优先级：
 # 1. 命令行参数 --nuxmv-path
 # 2. 环境变量 NUXMV_PATH (若外部环境已配置)
